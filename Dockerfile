@@ -1,4 +1,4 @@
-# Dockerfile optimisé pour Render
+# Dockerfile optimisé pour Render - Version 1.0.1
 FROM node:18-alpine AS base
 
 # Installer les dépendances système
