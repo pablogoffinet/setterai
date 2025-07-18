@@ -6,7 +6,6 @@ services:
     plan: starter
     region: oregon
     healthCheckPath: /health
-    dockerfilePath: ./Dockerfile.render
     envVars:
       - key: NODE_ENV
         value: production

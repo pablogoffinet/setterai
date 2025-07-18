@@ -1,4 +1,4 @@
-# Dockerfile optimisé pour Render
+# Multi-stage build pour optimiser la taille de l'image
 FROM node:18-alpine AS base
 
 # Installer les dépendances système
@@ -41,6 +41,14 @@ RUN npm ci
 COPY queue-service/ ./
 RUN npm run build
 
+# Stage pour le frontend
+FROM base AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
 # Stage de production
 FROM node:18-alpine AS production
 
@@ -55,30 +63,22 @@ COPY package*.json ./
 
 # Copier les builds depuis les stages précédents
 COPY --from=backend-builder /app/backend/dist ./backend/dist
+COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 COPY --from=backend-builder /app/backend/package*.json ./backend/
 COPY --from=backend-builder /app/backend/prisma ./backend/prisma
 
 COPY --from=ai-builder /app/ai-engine/dist ./ai-engine/dist
+COPY --from=ai-builder /app/ai-engine/node_modules ./ai-engine/node_modules
 COPY --from=ai-builder /app/ai-engine/package*.json ./ai-engine/
 
 COPY --from=queue-builder /app/queue-service/dist ./queue-service/dist
+COPY --from=queue-builder /app/queue-service/node_modules ./queue-service/node_modules
 COPY --from=queue-builder /app/queue-service/package*.json ./queue-service/
 
-# Réinstaller les dépendances en production
-WORKDIR /app/backend
-RUN npm ci --only=production
-
-WORKDIR /app/ai-engine
-RUN npm ci --only=production
-
-WORKDIR /app/queue-service
-RUN npm ci --only=production
-
-WORKDIR /app
-
-# Script de démarrage
-COPY start.sh ./
-RUN chmod +x start.sh
+COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
+COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
+COPY --from=frontend-builder /app/frontend/package*.json ./frontend/
+COPY --from=frontend-builder /app/frontend/public ./frontend/public
 
 # Créer un utilisateur non-root
 RUN addgroup -g 1001 -S nodejs
@@ -94,5 +94,9 @@ EXPOSE 3000
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
+
+# Script de démarrage
+COPY start.sh ./
+RUN chmod +x start.sh
 
 CMD ["./start.sh"] 
