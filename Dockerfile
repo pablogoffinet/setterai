@@ -21,7 +21,7 @@ RUN npm ci --only=production
 FROM base AS backend-builder
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY backend/ ./
 RUN npm run build
 
@@ -29,7 +29,7 @@ RUN npm run build
 FROM base AS ai-builder
 WORKDIR /app/ai-engine
 COPY ai-engine/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY ai-engine/ ./
 RUN npm run build
 
@@ -37,7 +37,7 @@ RUN npm run build
 FROM base AS queue-builder
 WORKDIR /app/queue-service
 COPY queue-service/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY queue-service/ ./
 RUN npm run build
 
@@ -45,7 +45,7 @@ RUN npm run build
 FROM base AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
