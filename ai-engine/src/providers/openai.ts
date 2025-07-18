@@ -110,12 +110,18 @@ export class OpenAIProvider {
       messages.push({ role: 'user', content: options.userMessage });
       // For Azure OpenAI, we don't specify the model in the request
       const modelToUse = this.isAzure ? undefined : (options.model || 'gpt-4o-mini');
-      const response = await this.client.chat.completions.create({
-        ...(modelToUse && { model: modelToUse }),
+      const requestBody: any = {
         messages,
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 1000,
-      });
+      };
+      
+      // Only add model for non-Azure OpenAI
+      if (!this.isAzure && modelToUse) {
+        requestBody.model = modelToUse;
+      }
+      
+      const response = await this.client.chat.completions.create(requestBody);
       const content = response.choices[0]?.message?.content || '';
       const usage = response.usage;
       return {

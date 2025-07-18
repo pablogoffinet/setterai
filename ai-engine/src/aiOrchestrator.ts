@@ -87,13 +87,15 @@ export class AIOrchestrator {
         logger.info('✅ Mistral provider initialized');
       }
 
-      // Initialize specialized agents
-      this.agents.set('CUSTOMER_SUPPORT', new CustomerSupportAgent());
-      this.agents.set('SALES', new SalesAgent());
-      this.agents.set('MARKETING', new MarketingAgent());
+      // Initialize specialized agents with default provider
+      const defaultProvider = this.providers.get('openai');
+      if (defaultProvider) {
+        this.agents.set('CUSTOMER_SUPPORT', new CustomerSupportAgent(defaultProvider));
+        this.agents.set('SALES', new SalesAgent(defaultProvider));
+        this.agents.set('MARKETING', new MarketingAgent(defaultProvider));
+      }
 
       // Initialize processors with the default provider
-      const defaultProvider = this.providers.get('openai');
       if (defaultProvider) {
         this.sentimentAnalyzer = new SentimentAnalyzer(defaultProvider);
         this.intentClassifier = new IntentClassifier(defaultProvider);
