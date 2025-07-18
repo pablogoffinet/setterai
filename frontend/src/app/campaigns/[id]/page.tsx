@@ -484,9 +484,10 @@ export default function CampaignDetailPage() {
               <Card key={prospect.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <Avatar className="w-10 h-10">
-                      {prospect.firstName?.[0]}{prospect.lastName?.[0]}
-                    </Avatar>
+                    <Avatar 
+                      className="w-10 h-10"
+                      fallback={`${prospect.firstName || ''} ${prospect.lastName || ''}`}
+                    />
                     <div>
                       <h4 className="font-medium text-gray-900">
                         {prospect.firstName} {prospect.lastName}

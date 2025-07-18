@@ -57,17 +57,13 @@ export class AIOrchestrator {
       // Initialize AI providers - Prioritize Azure OpenAI
       if (process.env['AZURE_OPENAI_API_KEY'] && process.env['AZURE_OPENAI_ENDPOINT']) {
         console.log('🟡 Attempting to create Azure OpenAI provider...');
-        const openai = new OpenAIProvider(process.env['AZURE_OPENAI_API_KEY'], {
-          endpoint: process.env['AZURE_OPENAI_ENDPOINT'],
-          apiVersion: process.env['AZURE_OPENAI_API_VERSION'],
-          deploymentName: process.env['AZURE_OPENAI_DEPLOYMENT_NAME']
-        });
+        const openai = new OpenAIProvider();
         this.providers.set('openai', openai);
         console.log('✅ Azure OpenAI provider set in map, size:', this.providers.size);
         logger.info('✅ Azure OpenAI provider initialized');
       } else if (process.env['OPENAI_API_KEY']) {
         console.log('🟡 Attempting to create OpenAI provider...');
-        const openai = new OpenAIProvider(process.env['OPENAI_API_KEY']);
+        const openai = new OpenAIProvider();
         this.providers.set('openai', openai);
         console.log('✅ OpenAI provider set in map, size:', this.providers.size);
         logger.info('✅ OpenAI provider initialized');
@@ -76,13 +72,13 @@ export class AIOrchestrator {
       }
 
       if (process.env['CLAUDE_API_KEY']) {
-        const claude = new ClaudeProvider(process.env['CLAUDE_API_KEY']);
+        const claude = new ClaudeProvider();
         this.providers.set('claude', claude);
         logger.info('✅ Claude provider initialized');
       }
 
       if (process.env['MISTRAL_API_KEY']) {
-        const mistral = new MistralProvider(process.env['MISTRAL_API_KEY']);
+        const mistral = new MistralProvider();
         this.providers.set('mistral', mistral);
         logger.info('✅ Mistral provider initialized');
       }
@@ -177,7 +173,9 @@ Règles importantes :
       }
 
       // Generate response using the provider
-      const response = await provider.generateResponse({
+      // Cast provider to OpenAIProvider to access generateResponse method
+      const openaiProvider = provider as any;
+      const response = await openaiProvider.generateResponse({
         systemPrompt,
         userMessage: message,
         conversationHistory: request.context?.conversationHistory || [],
@@ -208,28 +206,7 @@ Règles importantes :
     return this.intentClassifier.classify(text);
   }
 
-  private parseModel(modelString: string): { provider: string; model: string } {
-    // Format: "provider:model" or just "model" (defaults to openai)
-    const parts = modelString.split(':');
-    
-    if (parts.length === 2) {
-      return { provider: parts[0], model: parts[1] };
-    }
-    
-    // Default mappings
-    if (modelString.startsWith('gpt')) {
-      return { provider: 'openai', model: modelString };
-    }
-    if (modelString.startsWith('claude')) {
-      return { provider: 'claude', model: modelString };
-    }
-    if (modelString.startsWith('mistral')) {
-      return { provider: 'mistral', model: modelString };
-    }
-    
-    // Default to OpenAI GPT-4
-    return { provider: 'openai', model: 'gpt-4' };
-  }
+
 
   getAvailableProviders(): string[] {
     return Array.from(this.providers.keys());

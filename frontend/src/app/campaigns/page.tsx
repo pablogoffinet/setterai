@@ -174,12 +174,12 @@ export default function CampaignsPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Create mock campaign
-      const newCampaign = {
+      const newCampaign: Campaign = {
         id: Date.now().toString(),
         name: formData.name,
         description: formData.description,
-        status: 'DRAFT' as const,
-        type: formData.type,
+        status: 'DRAFT',
+        type: formData.type as 'LINKEDIN' | 'EMAIL' | 'WHATSAPP' | 'MULTI_CHANNEL',
         totalProspects: 0,
         sentCount: 0,
         openedCount: 0,

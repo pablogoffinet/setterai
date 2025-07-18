@@ -1,11 +1,12 @@
 services:
-  # Service principal (Backend API)
+  # Service principal (Backend API + AI Engine + Queue Service)
   - type: web
     name: linkedin-prospector-api
     env: docker
     plan: starter
     region: oregon
     healthCheckPath: /health
+    dockerfilePath: ./Dockerfile.render
     envVars:
       - key: NODE_ENV
         value: production
@@ -41,21 +42,7 @@ services:
       - key: QUEUE_SERVICE_URL
         value: http://localhost:3002
 
-  # Frontend (Next.js)
-  - type: web
-    name: linkedin-prospector-frontend
-    env: docker
-    plan: starter
-    region: oregon
-    buildCommand: cd frontend && npm run build
-    startCommand: cd frontend && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://linkedin-prospector-api.onrender.com
-      - key: PORT
-        value: 3003
+
 
 databases:
   # Base de données PostgreSQL
