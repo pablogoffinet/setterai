@@ -154,7 +154,7 @@ Génère uniquement le message final, sans explications supplémentaires.`;
 
 // Build personalized message prompt
 function buildPersonalizedMessagePrompt(context: any): string {
-  const { prospect, sender, aiParameters } = context;
+  const { sender, aiParameters } = context;
   
   return `Tu es un expert en prospection LinkedIn spécialisé dans la génération de messages personnalisés avec un taux d'ouverture optimal.
 
@@ -242,7 +242,7 @@ app.post('/classify-intent', async (req, res) => {
 });
 
 // Error handling middleware
-app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('Unhandled error:', error);
   return res.status(500).json({
     success: false,

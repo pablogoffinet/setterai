@@ -19,12 +19,12 @@ export class QueueManager {
     logger.info('Initializing Queue Manager...');
     
     // Setup message queue processors
-    const messageWorker = new Worker('message processing', async (job: any) => {
+    new Worker('message processing', async (job: any) => {
       logger.info('Processing send message job', { jobId: job.id });
       return this.processSendMessage(job.data);
     }, { connection: this.redisClient });
 
-    const aiWorker = new Worker('ai processing', async (job: any) => {
+    new Worker('ai processing', async (job: any) => {
       logger.info('Processing AI analysis job', { jobId: job.id });
       return this.processAIAnalysis(job.data);
     }, { connection: this.redisClient });
@@ -78,21 +78,9 @@ export class QueueManager {
     return { success: true, messageId: data.id };
   }
 
-  private async processReceiveMessage(data: any) {
-    logger.info('Processing receive message', { data });
-    // TODO: Implement actual message receiving logic
-    return { success: true, processed: true };
-  }
-
   private async processAIAnalysis(data: any) {
     logger.info('Processing AI analysis', { data });
     // TODO: Implement actual AI analysis logic
     return { success: true, analysis: 'completed' };
-  }
-
-  private async processAIGeneration(data: any) {
-    logger.info('Processing AI generation', { data });
-    // TODO: Implement actual AI generation logic
-    return { success: true, response: 'generated' };
   }
 } 

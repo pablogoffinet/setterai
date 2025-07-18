@@ -406,7 +406,7 @@ export class WebhooksController {
         }
       });
 
-      if (aiResponse.success && aiResponse.response) {
+      if (aiResponse.response) {
         // Envoyer la réponse via Unipile
         await this.sendAIResponse(
           channel.metadata?.unipile_account_id,
