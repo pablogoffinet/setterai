@@ -1,4 +1,4 @@
-# SaaS Messaging Platform 🚀
+# SetterAI - Plateforme SaaS de Messagerie Multi-Canaux 🚀
 
 Plateforme SaaS de messagerie multi-canaux avec IA et intégration Unipile. Une solution complète pour gérer les conversations sur LinkedIn, email, WhatsApp, Telegram, Slack, Discord et plus.
 
@@ -7,7 +7,7 @@ Plateforme SaaS de messagerie multi-canaux avec IA et intégration Unipile. Une 
 ### Structure Microservices
 
 ```
-saas-messaging-platform/
+setterai/
 ├── backend/                  # API Gateway principal (Express + TypeScript)
 ├── ai-engine/               # Moteur IA centralisé (OpenAI, Claude, Mistral)
 ├── queue-service/           # Service de queues (BullMQ + Redis)
@@ -41,14 +41,14 @@ saas-messaging-platform/
 
 1. **Cloner et installer**
 ```bash
-git clone <repo-url>
-cd saas-messaging-platform
+git clone https://github.com/pablogoffinet/setterai.git
+cd setterai
 npm run setup
 ```
 
 2. **Configuration**
 ```bash
-cp .env.example .env
+cp default.env .env
 # Éditer .env avec vos clés API
 ```
 
@@ -68,17 +68,17 @@ npm run dev
 - **Documentation API**: http://localhost:3000/api/docs
 - **AI Engine**: http://localhost:3001  
 - **Queue Service**: http://localhost:3002
-- **Frontend**: http://localhost:3003
+- **Frontend**: http://localhost:4200
 
 ## 🔧 Configuration
 
 ### Variables d'Environnement
 
-Copiez `.env.example` vers `.env` et configurez :
+Copiez `default.env` vers `.env` et configurez :
 
 ```bash
 # Base de données
-DATABASE_URL=postgresql://postgres:postgres123@localhost:5432/saas_messaging
+DATABASE_URL=postgresql://postgres:postgres123@localhost:5432/setterai
 
 # APIs IA
 OPENAI_API_KEY=sk-your-openai-key
@@ -237,10 +237,10 @@ Distribué sous licence MIT. Voir `LICENSE` pour plus d'informations.
 
 ## 🆘 Support
 
-- 📧 Email: support@saas-messaging.com
-- 📖 Documentation: [docs.saas-messaging.com](https://docs.saas-messaging.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/org/saas-messaging-platform/issues)
+- 📧 Email: support@setterai.com
+- 📖 Documentation: [docs.setterai.com](https://docs.setterai.com)
+- 🐛 Issues: [GitHub Issues](https://github.com/pablogoffinet/setterai/issues)
 
 ---
 
-**Développé avec ❤️ par l'équipe SaaS Messaging**
+**Développé avec ❤️ par l'équipe SetterAI**
