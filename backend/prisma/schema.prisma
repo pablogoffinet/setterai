@@ -1,0 +1,379 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public"]
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  firstName   String?  @map("first_name")
+  lastName    String?  @map("last_name")
+  company     String?
+  role        UserRole @default(USER)
+  isActive    Boolean  @default(true) @map("is_active")
+  emailVerified Boolean @default(false) @map("email_verified")
+  passwordHash String  @map("password_hash")
+  avatar      String?
+  timezone    String   @default("UTC")
+  language    String   @default("en")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+
+  // Relations
+  conversations   Conversation[]
+  channels        Channel[]
+  agents          Agent[]
+  userSettings    UserSetting[]
+  campaigns       Campaign[]
+  prospects       Prospect[]
+  aiProfiles      AIProfile[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Channel {
+  id          String      @id @default(uuid())
+  userId      String      @map("user_id")
+  name        String
+  type        ChannelType
+  provider    String      // unipile, linkedin, email, etc.
+  isActive    Boolean     @default(true) @map("is_active")
+  credentials Json        // Encrypted credentials
+  settings    Json        @default("{}")
+  metadata    Json        @default("{}")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  lastSyncAt  DateTime?   @map("last_sync_at")
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  messages      Message[]
+
+  @@map("channels")
+  @@schema("public")
+}
+
+model Conversation {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  channelId       String            @map("channel_id")
+  externalId      String?           @map("external_id") // ID from external platform
+  title           String?
+  status          ConversationStatus @default(ACTIVE)
+  priority        Priority          @default(NORMAL)
+  tags            String[]          @default([])
+  assignedAgentId String?           @map("assigned_agent_id")
+  metadata        Json              @default("{}")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  lastMessageAt   DateTime?         @map("last_message_at")
+
+  // Relations
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel        Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  assignedAgent  Agent?    @relation(fields: [assignedAgentId], references: [id])
+  messages       Message[]
+
+  @@unique([channelId, externalId])
+  @@map("conversations")
+  @@schema("public")
+}
+
+model Message {
+  id             String        @id @default(uuid())
+  conversationId String        @map("conversation_id")
+  channelId      String        @map("channel_id")
+  externalId     String?       @map("external_id")
+  direction      MessageDirection
+  content        String
+  contentType    ContentType   @default(TEXT)
+  status         MessageStatus @default(PENDING)
+  sentAt         DateTime?     @map("sent_at")
+  deliveredAt    DateTime?     @map("delivered_at")
+  readAt         DateTime?     @map("read_at")
+  errorMessage   String?       @map("error_message")
+  metadata       Json          @default("{}")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  channel      Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+  @@schema("public")
+}
+
+model Agent {
+  id           String      @id @default(uuid())
+  userId       String      @map("user_id")
+  name         String
+  type         AgentType
+  description  String?
+  isActive     Boolean     @default(true) @map("is_active")
+  prompt       String
+  model        String      @default("gpt-4")
+  temperature  Float       @default(0.7)
+  maxTokens    Int         @default(1000) @map("max_tokens")
+  settings     Json        @default("{}")
+  metadata     Json        @default("{}")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@map("agents")
+  @@schema("public")
+}
+
+model UserSetting {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  key       String
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@map("user_settings")
+  @@schema("public")
+}
+
+// Nouveaux modèles pour la prospection avancée
+model Campaign {
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  name        String
+  description String?
+  status      CampaignStatus @default(DRAFT)
+  type        CampaignType  @default(LINKEDIN)
+  
+  // Configuration de la campagne
+  targetAudience Json        @default("{}") // Critères de ciblage
+  messageTemplate String     // Template de base pour les messages
+  aiConfig       Json        @default("{}") // Configuration IA personnalisée
+  
+  // Paramètres d'envoi
+  dailyLimit     Int         @default(50) @map("daily_limit")
+  delayBetweenMessages Int   @default(5000) @map("delay_between_messages")
+  sendTimeStart  String?     @map("send_time_start") // Format: "09:00"
+  sendTimeEnd    String?     @map("send_time_end")   // Format: "18:00"
+  
+  // Statistiques
+  totalProspects Int         @default(0) @map("total_prospects")
+  sentCount      Int         @default(0) @map("sent_count")
+  openedCount    Int         @default(0) @map("opened_count")
+  repliedCount   Int         @default(0) @map("replied_count")
+  
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prospects Prospect[]
+  
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  startedAt DateTime?  @map("started_at")
+  endedAt   DateTime?  @map("ended_at")
+
+  @@map("campaigns")
+  @@schema("public")
+}
+
+model Prospect {
+  id          String        @id @default(uuid())
+  campaignId  String        @map("campaign_id")
+  userId      String        @map("user_id")
+  
+  // Informations de base
+  firstName   String?       @map("first_name")
+  lastName    String?       @map("last_name")
+  email       String?
+  phone       String?
+  linkedinUrl String?       @map("linkedin_url")
+  linkedinId  String?       @map("linkedin_id")
+  
+  // Profil LinkedIn enrichi
+  headline    String?
+  company     String?
+  position    String?
+  location    String?
+  industry    String?
+  experience  Json          @default("[]") // Array d'expériences
+  education   Json          @default("[]") // Array de formations
+  skills      String[]      @default([])
+  
+  // Score et qualification
+  score       Float         @default(0.0) // Score de qualification (0-1)
+  status      ProspectStatus @default(PENDING)
+  
+  // Messages
+  personalizedMessage String? @map("personalized_message")
+  sentAt       DateTime?   @map("sent_at")
+  openedAt     DateTime?   @map("opened_at")
+  repliedAt    DateTime?   @map("replied_at")
+  
+  // Métadonnées
+  metadata    Json          @default("{}")
+  
+  // Relations
+  campaign    Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  profileFetchedAt DateTime? @map("profile_fetched_at")
+
+  @@unique([campaignId, linkedinId])
+  @@map("prospects")
+  @@schema("public")
+}
+
+model AIProfile {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  
+  // Configuration personnalisée
+  userProfile Json     @default("{}") // Profil utilisateur
+  businessInfo Json    @default("{}") // Informations business
+  communicationStyle Json @default("{}") // Style de communication
+  targetAudience Json  @default("{}") // Audience cible
+  messageTemplates Json @default("{}") // Templates de messages
+  aiParameters Json    @default("{}") // Paramètres IA
+  
+  isActive    Boolean  @default(true) @map("is_active")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_profiles")
+  @@schema("public")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+  VIEWER
+  
+  @@schema("public")
+}
+
+enum ChannelType {
+  LINKEDIN
+  EMAIL
+  WHATSAPP
+  TELEGRAM
+  SLACK
+  DISCORD
+  SMS
+  WEBSITE_CHAT
+  
+  @@schema("public")
+}
+
+enum ConversationStatus {
+  ACTIVE
+  CLOSED
+  ARCHIVED
+  SPAM
+  
+  @@schema("public")
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+  
+  @@schema("public")
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+  
+  @@schema("public")
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  RETRYING
+  
+  @@schema("public")
+}
+
+enum ContentType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+  LINK
+  
+  @@schema("public")
+}
+
+enum AgentType {
+  CUSTOMER_SUPPORT
+  SALES
+  MARKETING
+  CUSTOM
+  
+  @@schema("public")
+}
+
+// Nouveaux enums pour la prospection
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+  
+  @@schema("public")
+}
+
+enum CampaignType {
+  LINKEDIN
+  EMAIL
+  WHATSAPP
+  MULTI_CHANNEL
+  
+  @@schema("public")
+}
+
+enum ProspectStatus {
+  PENDING
+  QUALIFIED
+  CONTACTED
+  RESPONDED
+  CONVERTED
+  REJECTED
+  
+  @@schema("public")
+} 

@@ -1,0 +1,73 @@
+services:
+  # Service principal (Backend API)
+  - type: web
+    name: linkedin-prospector-api
+    env: docker
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: linkedin-prospector-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: linkedin-prospector-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: UNIPILE_API_KEY
+        sync: false
+      - key: UNIPILE_API_URL
+        value: https://api8.unipile.com:13813/api/v1
+      - key: UNIPILE_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://linkedin-prospector-frontend.onrender.com
+      - key: AI_ENGINE_URL
+        value: http://localhost:3001
+      - key: QUEUE_SERVICE_URL
+        value: http://localhost:3002
+
+  # Frontend (Next.js)
+  - type: web
+    name: linkedin-prospector-frontend
+    env: docker
+    plan: starter
+    region: oregon
+    buildCommand: cd frontend && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://linkedin-prospector-api.onrender.com
+      - key: PORT
+        value: 3003
+
+databases:
+  # Base de données PostgreSQL
+  - name: linkedin-prospector-db
+    databaseName: linkedin_prospector
+    user: linkedin_prospector_user
+    plan: starter
+    region: oregon
+
+  # Redis pour les queues
+  - name: linkedin-prospector-redis
+    databaseName: linkedin_prospector_redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru 
