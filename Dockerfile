@@ -1,4 +1,4 @@
-# Dockerfile optimisé pour Render - Version 1.0.1
+# Dockerfile optimisé pour Render - Version 1.0.2 (FORCE REBUILD)
 FROM node:18-alpine AS base
 
 # Installer les dépendances système
@@ -53,7 +53,7 @@ WORKDIR /app
 COPY default.env ./
 COPY package*.json ./
 
-# Copier les builds depuis les stages précédents
+# Copier les builds depuis les stages précédents (SANS node_modules)
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=backend-builder /app/backend/package*.json ./backend/
 COPY --from=backend-builder /app/backend/prisma ./backend/prisma
