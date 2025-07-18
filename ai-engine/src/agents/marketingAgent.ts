@@ -6,16 +6,16 @@ export class MarketingAgent extends BaseAgent {
     super(provider);
   }
 
-  async processMessage(message: string, context?: any) {
-    const prompt = `You are a creative marketing agent. Please respond to the following message with engaging marketing content:
+  async processMessage(message: string) {
+    const prompt = `You are a marketing expert. Please help create engaging marketing content based on the following request:
 
-Message: "${message}"
+Request: "${message}"
 
-Please provide a marketing-focused response:`;
+Please provide marketing content:`;
 
     return await this.generateResponse(prompt, {
-      temperature: 0.9,
-      maxTokens: 300
+      temperature: 0.8,
+      maxTokens: 400
     });
   }
 } 

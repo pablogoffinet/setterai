@@ -143,7 +143,7 @@ export class OpenAIProvider {
       maxTokens: 10,
       temperature: 0.1
     });
-    if (result.success) {
+    if (result.success && result.response) {
       const sentiment = result.response.trim().toLowerCase();
       return {
         success: true,

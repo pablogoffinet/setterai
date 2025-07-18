@@ -7,7 +7,7 @@ export class ClaudeProvider {
     }
   }
 
-  async generateCompletion(prompt: string, options: any = {}) {
+  async generateCompletion() {
     try {
       if (!process.env['CLAUDE_API_KEY']) {
         return {
@@ -31,7 +31,7 @@ export class ClaudeProvider {
     }
   }
 
-  async analyzeSentiment(text: string) {
+  async analyzeSentiment() {
     return {
       success: false,
       error: 'Claude sentiment analysis not implemented'

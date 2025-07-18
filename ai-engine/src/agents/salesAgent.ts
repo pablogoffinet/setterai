@@ -6,16 +6,16 @@ export class SalesAgent extends BaseAgent {
     super(provider);
   }
 
-  async processMessage(message: string, context?: any) {
-    const prompt = `You are a professional sales agent. Please respond to the following prospect message in a persuasive but not pushy manner:
+  async processMessage(message: string) {
+    const prompt = `You are a sales expert. Please help with sales-related questions and strategies based on the following request:
 
-Prospect message: "${message}"
+Request: "${message}"
 
-Please provide a sales-focused response:`;
+Please provide sales guidance:`;
 
     return await this.generateResponse(prompt, {
-      temperature: 0.8,
-      maxTokens: 300
+      temperature: 0.7,
+      maxTokens: 350
     });
   }
 } 

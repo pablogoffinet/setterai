@@ -1,43 +1,33 @@
-import Bull from 'bull';
-import Redis from 'redis';
+import { Queue, Worker } from 'bullmq';
+import Redis from 'ioredis';
 import { logger } from './utils/logger';
 
 export class QueueManager {
-  private messageQueue: Bull.Queue;
-  private aiProcessQueue: Bull.Queue;
-  private redisClient: Redis.RedisClientType;
+  private messageQueue: Queue;
+  private aiProcessQueue: Queue;
+  private redisClient: Redis;
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = process.env['REDIS_URL'] || 'redis://localhost:6379';
     
-    this.messageQueue = new Bull('message processing', redisUrl);
-    this.aiProcessQueue = new Bull('ai processing', redisUrl);
+    this.redisClient = new Redis(redisUrl);
+    this.messageQueue = new Queue('message processing', { connection: this.redisClient });
+    this.aiProcessQueue = new Queue('ai processing', { connection: this.redisClient });
   }
 
   async initialize() {
     logger.info('Initializing Queue Manager...');
     
     // Setup message queue processors
-    this.messageQueue.process('send', async (job: any) => {
+    const messageWorker = new Worker('message processing', async (job: any) => {
       logger.info('Processing send message job', { jobId: job.id });
       return this.processSendMessage(job.data);
-    });
+    }, { connection: this.redisClient });
 
-    this.messageQueue.process('receive', async (job: any) => {
-      logger.info('Processing receive message job', { jobId: job.id });
-      return this.processReceiveMessage(job.data);
-    });
-
-    // Setup AI processing queue
-    this.aiProcessQueue.process('analyze', async (job: any) => {
+    const aiWorker = new Worker('ai processing', async (job: any) => {
       logger.info('Processing AI analysis job', { jobId: job.id });
       return this.processAIAnalysis(job.data);
-    });
-
-    this.aiProcessQueue.process('generate', async (job: any) => {
-      logger.info('Processing AI generation job', { jobId: job.id });
-      return this.processAIGeneration(job.data);
-    });
+    }, { connection: this.redisClient });
 
     logger.info('Queue Manager initialized successfully');
   }

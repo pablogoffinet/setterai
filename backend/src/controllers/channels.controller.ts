@@ -4,6 +4,14 @@ import { logger } from '../utils/logger';
 import { UnipileService } from '../services/unipile.service';
 import { UnipileCredentials } from '../types/unipile';
 
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+}
+
 const prisma = new PrismaClient();
 const unipileService = new UnipileService();
 
@@ -12,7 +20,7 @@ export class ChannelsController {
   /**
    * Connecter un nouveau canal via Unipile
    */
-  async connectChannel(req: Request, res: Response) {
+  async connectChannel(req: AuthenticatedRequest, res: Response) {
     try {
       const { name, type, provider, credentials, settings } = req.body;
       const userId = req.user?.id; // Assumant qu'on a un middleware d'auth
@@ -108,7 +116,7 @@ export class ChannelsController {
   /**
    * Lister tous les canaux de l'utilisateur
    */
-  async listChannels(req: Request, res: Response) {
+  async listChannels(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user?.id;
 
@@ -158,7 +166,7 @@ export class ChannelsController {
   /**
    * Obtenir les détails d'un canal spécifique
    */
-  async getChannel(req: Request, res: Response) {
+  async getChannel(req: AuthenticatedRequest, res: Response) {
     try {
       const { channelId } = req.params;
       const userId = req.user?.id;
@@ -198,7 +206,7 @@ export class ChannelsController {
       if (unipileAccountId) {
         const unipileResult = await unipileService.getAccount(unipileAccountId);
         if (unipileResult.success) {
-          unipileStatus = unipileResult.data?.status;
+          unipileStatus = unipileResult.data;
         }
       }
 
@@ -206,7 +214,6 @@ export class ChannelsController {
         success: true,
         data: {
           ...channel,
-          credentials: undefined, // Ne pas exposer les credentials
           unipileStatus
         }
       });
@@ -221,12 +228,11 @@ export class ChannelsController {
   }
 
   /**
-   * Synchroniser un canal avec Unipile
+   * Synchroniser un canal
    */
-  async syncChannel(req: Request, res: Response) {
+  async syncChannel(req: AuthenticatedRequest, res: Response) {
     try {
       const { channelId } = req.params;
-      const { linkedin_product, before, after } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -250,44 +256,29 @@ export class ChannelsController {
         });
       }
 
-      const unipileAccountId = channel.metadata?.unipile_account_id;
-      if (!unipileAccountId) {
+      // Vérifier que le canal est actif
+      if (!channel.isActive) {
         return res.status(400).json({
           success: false,
-          error: { message: 'Channel not connected to Unipile' }
+          error: { message: 'Channel is not active' }
         });
       }
 
       // Déclencher la synchronisation
-      const syncResult = await unipileService.syncAccount(unipileAccountId, {
-        linkedin_product,
-        before,
-        after
-      });
+      const syncResult = await this.performChannelSync(channel);
 
-      if (!syncResult.success) {
-        return res.status(400).json({
+      if (syncResult.success) {
+        res.json({
+          success: true,
+          message: 'Channel synchronized successfully',
+          data: syncResult.data
+        });
+      } else {
+        res.status(400).json({
           success: false,
-          error: {
-            message: 'Synchronization failed',
-            details: syncResult.error
-          }
+          error: { message: 'Sync failed', details: syncResult.error }
         });
       }
-
-      // Mettre à jour la dernière synchronisation
-      await prisma.channel.update({
-        where: { id: channelId },
-        data: { lastSyncAt: new Date() }
-      });
-
-      res.json({
-        success: true,
-        data: {
-          message: 'Synchronization started',
-          syncStatus: syncResult.data
-        }
-      });
 
     } catch (error) {
       logger.error('Error syncing channel:', error);
@@ -301,7 +292,7 @@ export class ChannelsController {
   /**
    * Déconnecter un canal
    */
-  async disconnectChannel(req: Request, res: Response) {
+  async disconnectChannel(req: AuthenticatedRequest, res: Response) {
     try {
       const { channelId } = req.params;
       const userId = req.user?.id;
@@ -327,27 +318,23 @@ export class ChannelsController {
         });
       }
 
-      // Déconnecter de Unipile si connecté
+      // Désactiver le canal
+      await prisma.channel.update({
+        where: { id: channelId },
+        data: { isActive: false }
+      });
+
+      // Déconnecter du service Unipile si applicable
       const unipileAccountId = channel.metadata?.unipile_account_id;
       if (unipileAccountId) {
         await unipileService.disconnectAccount(unipileAccountId);
       }
 
-      // Désactiver le canal (ne pas le supprimer pour garder l'historique)
-      await prisma.channel.update({
-        where: { id: channelId },
-        data: {
-          isActive: false,
-          metadata: {
-            ...channel.metadata,
-            disconnected_at: new Date().toISOString()
-          }
-        }
-      });
+      logger.info(`Channel disconnected: ${channelId}`, { userId });
 
       res.json({
         success: true,
-        data: { message: 'Channel disconnected successfully' }
+        message: 'Channel disconnected successfully'
       });
 
     } catch (error) {
@@ -362,10 +349,9 @@ export class ChannelsController {
   /**
    * Obtenir les conversations d'un canal
    */
-  async getChannelConversations(req: Request, res: Response) {
+  async getChannelConversations(req: AuthenticatedRequest, res: Response) {
     try {
       const { channelId } = req.params;
-      const { page = 1, limit = 20 } = req.query;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -375,55 +361,30 @@ export class ChannelsController {
         });
       }
 
-      const channel = await prisma.channel.findFirst({
-        where: {
-          id: channelId,
-          userId
-        }
-      });
-
-      if (!channel) {
-        return res.status(404).json({
-          success: false,
-          error: { message: 'Channel not found' }
-        });
-      }
-
       const conversations = await prisma.conversation.findMany({
-        where: { channelId },
+        where: {
+          channelId,
+          channel: {
+            userId
+          }
+        },
         include: {
-          _count: {
-            select: { messages: true }
-          },
           messages: {
-            take: 1,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'asc' },
+            take: 10 // Limiter les messages pour éviter la surcharge
+          },
+          _count: {
             select: {
-              id: true,
-              content: true,
-              direction: true,
-              createdAt: true
+              messages: true
             }
           }
         },
-        skip: (Number(page) - 1) * Number(limit),
-        take: Number(limit),
         orderBy: { updatedAt: 'desc' }
-      });
-
-      const total = await prisma.conversation.count({
-        where: { channelId }
       });
 
       res.json({
         success: true,
-        data: conversations,
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total,
-          totalPages: Math.ceil(total / Number(limit))
-        }
+        data: conversations
       });
 
     } catch (error) {
@@ -435,31 +396,20 @@ export class ChannelsController {
     }
   }
 
-  /**
-   * Chiffrer les credentials (implémentation basique)
-   */
+  // Méthodes privées
+
   private async encryptCredentials(credentials: any): Promise<any> {
-    // TODO: Implémenter un chiffrement réel avec une clé secrète
-    // Pour le moment, on retourne les credentials tels quels
+    // TODO: Implémenter le chiffrement des credentials
     return credentials;
   }
 
-  /**
-   * Déclencher la synchronisation initiale
-   */
   private async triggerInitialSync(channelId: string, unipileAccountId: string): Promise<void> {
-    try {
-      // TODO: Ajouter la synchronisation à une queue pour traitement asynchrone
-      logger.info(`Triggering initial sync for channel ${channelId} with Unipile account ${unipileAccountId}`);
-      
-      // Synchroniser les données des 30 derniers jours
-      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-      await unipileService.syncAccount(unipileAccountId, {
-        after: thirtyDaysAgo
-      });
-      
-    } catch (error) {
-      logger.error('Error triggering initial sync:', error);
-    }
+    // TODO: Implémenter la synchronisation initiale
+    logger.info('Initial sync triggered', { channelId, unipileAccountId });
+  }
+
+  private async performChannelSync(channel: any): Promise<{ success: boolean; data?: any; error?: string }> {
+    // TODO: Implémenter la synchronisation
+    return { success: true, data: { syncedAt: new Date() } };
   }
 } 

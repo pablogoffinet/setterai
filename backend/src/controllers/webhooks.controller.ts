@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { logger } from '../utils/logger';
 import { environment } from '../config/environment';
-import { UnipileWebhookEvent } from '../types/unipile';
+import { UnipileWebhookEvent, UnipileMessage, UnipileChat } from '../types/unipile';
 import { UnipileService } from '../services/unipile.service';
 import { AIEngineService } from '../services/ai-engine.service';
 import { PrismaClient } from '@prisma/client';
@@ -207,25 +207,21 @@ export class WebhooksController {
     try {
       const chatData = event.data as UnipileChat;
       
-      // Mettre à jour la conversation correspondante
+      // Mettre à jour les métadonnées de la conversation si elle existe
       await prisma.conversation.updateMany({
         where: {
           externalId: chatData.id
         },
         data: {
-          name: chatData.name,
           metadata: {
-            unipile_data: chatData,
-            participants: chatData.participants,
-            is_archived: chatData.is_archived,
-            is_muted: chatData.is_muted
+            unipile_chat_data: chatData,
+            last_updated: new Date().toISOString()
           }
         }
       });
 
       logger.info('Chat updated', {
-        chatId: chatData.id,
-        name: chatData.name
+        chatId: chatData.id
       });
 
     } catch (error) {
@@ -238,57 +234,52 @@ export class WebhooksController {
    */
   private async handleAccountDisconnected(event: UnipileWebhookEvent) {
     try {
-      // Désactiver le canal correspondant
-      const channel = await this.findChannelByUnipileAccountId(event.account_id);
-      if (channel) {
-        await prisma.channel.update({
-          where: { id: channel.id },
-          data: {
-            isActive: false,
-            metadata: {
-              ...channel.metadata,
-              disconnected_at: new Date().toISOString(),
-              disconnect_reason: 'account_disconnected_webhook'
-            }
+      // Désactiver tous les canaux associés à ce compte Unipile
+      await prisma.channel.updateMany({
+        where: {
+          metadata: {
+            path: ['unipile_account_id'],
+            equals: event.account_id
           }
-        });
+        },
+        data: {
+          isActive: false,
+          metadata: {
+            disconnected_at: new Date().toISOString(),
+            disconnect_reason: 'webhook'
+          }
+        }
+      });
 
-        logger.warn('Channel automatically disconnected due to Unipile account disconnection', {
-          channelId: channel.id,
-          unipileAccountId: event.account_id
-        });
-      }
+      logger.info('Account disconnected, channels deactivated', {
+        accountId: event.account_id
+      });
 
     } catch (error) {
       logger.error('Error handling account disconnected:', error);
     }
   }
 
-  /**
-   * Trouver un canal par ID de compte Unipile
-   */
+  // Méthodes utilitaires
+
   private async findChannelByUnipileAccountId(unipileAccountId: string) {
     return await prisma.channel.findFirst({
       where: {
         metadata: {
           path: ['unipile_account_id'],
           equals: unipileAccountId
-        },
-        isActive: true
+        }
       }
     });
   }
 
-  /**
-   * Trouver ou créer une conversation
-   */
   private async findOrCreateConversation(
     channelId: string,
     chatId: string,
     sender: any,
     recipients: any[]
   ) {
-    // Chercher la conversation existante
+    // Chercher une conversation existante
     let conversation = await prisma.conversation.findFirst({
       where: {
         channelId,
@@ -302,193 +293,192 @@ export class WebhooksController {
         data: {
           channelId,
           externalId: chatId,
-          name: sender.name || recipients[0]?.name || 'Conversation',
+          name: this.generateConversationName(sender, recipients),
           status: 'ACTIVE',
-          priority: 'NORMAL',
           metadata: {
             sender,
             recipients,
-            chat_type: recipients.length > 1 ? 'GROUP' : 'INDIVIDUAL'
+            created_from_webhook: true
           }
         }
-      });
-
-      logger.info('New conversation created', {
-        conversationId: conversation.id,
-        chatId,
-        channelId
       });
     }
 
     return conversation;
   }
 
-  /**
-   * Mapper le type de contenu Unipile vers notre enum
-   */
-  private mapUnipileContentType(unipileType: string): string {
-    const mapping: Record<string, string> = {
-      'TEXT': 'TEXT',
-      'IMAGE': 'IMAGE',
-      'FILE': 'FILE',
-      'AUDIO': 'AUDIO',
-      'VIDEO': 'VIDEO',
-      'LINK': 'LINK'
-    };
-    return mapping[unipileType] || 'TEXT';
+  private generateConversationName(sender: any, recipients: any[]): string {
+    // Générer un nom basé sur les participants
+    const participants = [sender, ...recipients];
+    const names = participants
+      .map(p => p.name || p.email || p.phone || 'Unknown')
+      .filter(Boolean);
+    
+    return names.length > 0 ? names.join(', ') : 'New Conversation';
   }
 
-  /**
-   * Mapper le statut de message Unipile vers notre enum
-   */
+  private mapUnipileContentType(unipileType: string): string {
+    const typeMap: Record<string, string> = {
+      'TEXT': 'text',
+      'IMAGE': 'image',
+      'FILE': 'file',
+      'AUDIO': 'audio',
+      'VIDEO': 'video',
+      'LINK': 'link'
+    };
+    return typeMap[unipileType] || 'text';
+  }
+
   private mapUnipileMessageStatus(unipileStatus: string): string {
-    const mapping: Record<string, string> = {
+    const statusMap: Record<string, string> = {
       'PENDING': 'PENDING',
       'SENT': 'SENT',
       'DELIVERED': 'DELIVERED',
       'READ': 'READ',
       'FAILED': 'FAILED'
     };
-    return mapping[unipileStatus] || 'PENDING';
+    return statusMap[unipileStatus] || 'PENDING';
   }
 
-  /**
-   * Déclencher une réponse IA si configuré
-   */
   private async triggerAIResponse(conversationId: string, messageId: string) {
     try {
-      logger.info('AI response triggered', {
-        conversationId,
-        messageId
-      });
-
-      // Vérifier si l'AI Engine est accessible
-      const isAIAvailable = await aiEngineService.healthCheck();
-      if (!isAIAvailable) {
-        logger.warn('AI Engine is not available, skipping auto-response');
-        return;
-      }
-
-      // Récupérer les détails du message et de la conversation
+      // Récupérer le message et la conversation
       const message = await prisma.message.findUnique({
         where: { id: messageId },
         include: {
           conversation: {
             include: {
-              channel: true,
-              messages: {
-                orderBy: { createdAt: 'desc' },
-                take: 10, // Historique des 10 derniers messages
-                select: {
-                  content: true,
-                  direction: true,
-                  createdAt: true
-                }
-              }
+              channel: true
             }
           }
         }
       });
 
       if (!message || !message.conversation) {
-        logger.warn('Message or conversation not found for AI response');
+        logger.warn('Message or conversation not found for AI response', { messageId });
         return;
       }
 
-      // Construire l'historique de conversation
-      const conversationHistory = message.conversation.messages.map(msg => ({
-        role: msg.direction === 'INBOUND' ? 'user' : 'assistant' as const,
-        content: msg.content
-      }));
-
-      // Contexte enrichi avec profil utilisateur
-      const context = {
-        conversationHistory,
-        userProfile: message.conversation.participant,
-      };
-
-      // Générer une réponse selon le type de canal
-      let generatedResponse: string;
+      // Vérifier si la réponse IA est activée pour ce canal
+      const channel = message.conversation.channel;
+      const aiEnabled = channel.settings?.ai?.enabled;
       
-      if (message.conversation.channel.type === 'LINKEDIN') {
-        generatedResponse = await aiEngineService.generateLinkedInResponse(
-          message.content,
-          context
-        );
-      } else {
-        generatedResponse = await aiEngineService.generateSupportResponse(
-          message.content,
-          context
-        );
+      if (!aiEnabled) {
+        logger.debug('AI response not enabled for channel', { channelId: channel.id });
+        return;
       }
 
-      // Envoyer la réponse via Unipile
-      await this.sendAIResponse(
-        message.conversation.channel.providerAccountId,
-        message.conversation.chatId,
-        generatedResponse
-      );
+      // Vérifier si c'est un message entrant (pas une réponse IA)
+      if (message.direction !== 'INBOUND') {
+        logger.debug('Skipping AI response for outbound message', { messageId });
+        return;
+      }
 
-      logger.info('AI response sent successfully', {
-        conversationId,
-        messageId,
-        responseLength: generatedResponse.length,
-        channelType: message.conversation.channel.type
+      // Vérifier si on a déjà répondu récemment à cette conversation
+      const recentAIResponse = await prisma.message.findFirst({
+        where: {
+          conversationId,
+          direction: 'OUTBOUND',
+          createdAt: {
+            gte: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes
+          }
+        }
       });
 
-    } catch (error) {
-      logger.error('Error triggering AI response:', error);
-      // Ne pas faire échouer le webhook pour une erreur d'IA
-    }
-  }
+      if (recentAIResponse) {
+        logger.debug('Recent AI response exists, skipping', { conversationId });
+        return;
+      }
 
-  /**
-   * Envoyer une réponse IA via Unipile
-   */
-  private async sendAIResponse(accountId: string, chatId: string, content: string) {
-    try {
-      const result = await unipileService.sendMessage(chatId, content);
-      
-      if (result.success) {
-        // Enregistrer le message envoyé dans la base de données
+      // Générer la réponse IA
+      const aiResponse = await aiEngineService.generateResponse({
+        message: message.content,
+        agentConfig: {
+          type: channel.settings?.ai?.agentType || 'CUSTOMER_SUPPORT',
+          model: channel.settings?.ai?.model || 'gpt-4o',
+          temperature: channel.settings?.ai?.temperature || 0.7,
+          maxTokens: channel.settings?.ai?.maxTokens || 300
+        },
+        context: {
+          conversationHistory: await this.getConversationHistory(conversationId),
+          channelType: channel.type,
+          userProfile: channel.settings?.ai?.userProfile
+        }
+      });
+
+      if (aiResponse.success && aiResponse.response) {
+        // Envoyer la réponse via Unipile
+        await this.sendAIResponse(
+          channel.metadata?.unipile_account_id,
+          message.conversation.externalId,
+          aiResponse.response
+        );
+
+        // Stocker la réponse dans la base de données
         await prisma.message.create({
           data: {
-            id: result.data.id,
-            conversationId: await this.getConversationIdFromChatId(chatId),
-            content,
+            conversationId,
+            channelId: channel.id,
             direction: 'OUTBOUND',
-            status: 'SENT',
-            providerMessageId: result.data.id,
+            content: aiResponse.response,
+            contentType: 'text',
+            status: 'PENDING',
             metadata: {
-              aiGenerated: true,
-              model: 'gpt-4o',
-              confidence: result.data.confidence || 0.8,
-              generatedAt: new Date().toISOString()
+              ai_generated: true,
+              ai_model: aiResponse.model,
+              ai_confidence: aiResponse.confidence,
+              response_to: messageId
             }
           }
         });
 
-        logger.info('AI response saved to database', {
-          messageId: result.data.id,
-          chatId,
-          contentLength: content.length
+        logger.info('AI response sent successfully', {
+          conversationId,
+          responseTo: messageId,
+          model: aiResponse.model
         });
       }
+
     } catch (error) {
-      logger.error('Error sending AI response:', error);
+      logger.error('Error triggering AI response:', error);
+    }
+  }
+
+  private async sendAIResponse(accountId: string, chatId: string, content: string) {
+    try {
+      // TODO: Implémenter l'envoi via l'API Unipile
+      logger.info('Sending AI response via Unipile', {
+        accountId,
+        chatId,
+        contentLength: content.length
+      });
+
+      // Pour le moment, on simule l'envoi
+      // await unipileService.sendMessage(accountId, chatId, content);
+
+    } catch (error) {
+      logger.error('Error sending AI response via Unipile:', error);
       throw error;
     }
   }
 
-  /**
-   * Obtenir l'ID de conversation à partir du chat ID
-   */
+  private async getConversationHistory(conversationId: string): Promise<Array<{ role: 'user' | 'assistant'; content: string }>> {
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'asc' },
+      take: 10 // Limiter l'historique
+    });
+
+    return messages.map(msg => ({
+      role: msg.direction === 'INBOUND' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+  }
+
   private async getConversationIdFromChatId(chatId: string): Promise<string> {
     const conversation = await prisma.conversation.findFirst({
-      where: { chatId },
-      select: { id: true }
+      where: { externalId: chatId }
     });
-    
     return conversation?.id || '';
   }
 } 

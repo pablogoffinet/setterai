@@ -39,11 +39,11 @@ export interface ProcessResult {
 export class AIOrchestrator {
   private providers: Map<string, BaseProvider> = new Map();
   private agents: Map<string, BaseAgent> = new Map();
-  private sentimentAnalyzer: SentimentAnalyzer;
-  private intentClassifier: IntentClassifier;
+  private sentimentAnalyzer!: SentimentAnalyzer;
+  private intentClassifier!: IntentClassifier;
 
   constructor() {
-    // These will be initialized after providers are set up
+    // Properties will be initialized in initialize() method
   }
 
   async initialize(): Promise<void> {
@@ -110,7 +110,7 @@ export class AIOrchestrator {
   }
 
   async processMessage(request: MessageProcessRequest): Promise<ProcessResult> {
-    const { message, agentConfig, context } = request;
+    const { message, agentConfig } = request;
     
     try {
       // Get the appropriate provider (default to openai)
@@ -180,7 +180,7 @@ Règles importantes :
       const response = await provider.generateResponse({
         systemPrompt,
         userMessage: message,
-        conversationHistory: context?.conversationHistory || [],
+        conversationHistory: request.context?.conversationHistory || [],
         temperature: agentConfig.temperature || 0.7,
         maxTokens: agentConfig.maxTokens || 1000,
       });
@@ -204,8 +204,8 @@ Règles importantes :
     return this.sentimentAnalyzer.analyze(text);
   }
 
-  async classifyIntent(text: string, possibleIntents?: string[]): Promise<any> {
-    return this.intentClassifier.classify(text, possibleIntents);
+  async classifyIntent(text: string): Promise<any> {
+    return this.intentClassifier.classify(text);
   }
 
   private parseModel(modelString: string): { provider: string; model: string } {

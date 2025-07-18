@@ -6,7 +6,7 @@ export class CustomerSupportAgent extends BaseAgent {
     super(provider);
   }
 
-  async processMessage(message: string, context?: any) {
+  async processMessage(message: string) {
     const prompt = `You are a helpful customer support agent. Please respond to the following customer message in a professional and helpful manner:
 
 Customer message: "${message}"

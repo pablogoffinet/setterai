@@ -18,7 +18,7 @@ async function startServer() {
     app.use(express.json({ limit: '10mb' }));
 
     // Health check
-    app.get('/health', (req, res) => {
+    app.get('/health', (_, res) => {
       res.json({
         status: 'ok',
         service: 'queue-service',

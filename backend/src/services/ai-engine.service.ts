@@ -225,4 +225,11 @@ Règles importantes :
     const result = await this.processMessage(request);
     return result.response;
   }
+
+  /**
+   * Générer une réponse IA (alias pour processMessage)
+   */
+  async generateResponse(request: AIProcessRequest): Promise<AIProcessResponse> {
+    return this.processMessage(request);
+  }
 } 

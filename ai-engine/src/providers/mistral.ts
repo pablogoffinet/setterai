@@ -7,7 +7,7 @@ export class MistralProvider {
     }
   }
 
-  async generateCompletion(prompt: string, options: any = {}) {
+  async generateCompletion() {
     try {
       if (!process.env['MISTRAL_API_KEY']) {
         return {
@@ -31,7 +31,7 @@ export class MistralProvider {
     }
   }
 
-  async analyzeSentiment(text: string) {
+  async analyzeSentiment() {
     return {
       success: false,
       error: 'Mistral sentiment analysis not implemented'

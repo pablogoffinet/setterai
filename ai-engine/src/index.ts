@@ -7,7 +7,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { logger } from './utils/logger';
 import { AIOrchestrator } from './aiOrchestrator';
-import { validateEnv } from './utils/environment';
 
 const app = express();
 const port = process.env['PORT'] || 3001;
@@ -23,7 +22,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_, res) => {
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -55,13 +54,13 @@ app.post('/process-message', async (req, res) => {
       context
     });
 
-    res.json({
+    return res.json({
       success: true,
       ...result
     });
   } catch (error) {
     logger.error('Error processing message:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error'
     });
@@ -86,30 +85,30 @@ app.post('/generate-message', async (req, res) => {
     });
 
     // Construire le prompt pour la génération de message personnalisé
-    const systemPrompt = this.buildPersonalizedMessagePrompt(context);
+    const systemPrompt = buildPersonalizedMessagePrompt(context);
     
-    const messagePrompt = `Génère un message personnalisé pour ${context.prospect.name} en utilisant ces informations :
+    const messagePrompt = `Génère un message personnalisé pour ${context.prospect?.name || 'le prospect'} en utilisant ces informations :
 
 PROFIL DU PROSPECT :
-- Nom : ${context.prospect.name}
-- Poste : ${context.prospect.position || 'Non spécifié'}
-- Entreprise : ${context.prospect.company || 'Non spécifiée'}
-- Localisation : ${context.prospect.location || 'Non spécifiée'}
-- Secteur : ${context.prospect.industry || 'Non spécifié'}
-- Headline : ${context.prospect.headline || 'Non spécifié'}
-- Expériences récentes : ${context.prospect.experience?.map(exp => `${exp.title} chez ${exp.company}`).join(', ') || 'Non spécifiées'}
-- Compétences : ${context.prospect.skills?.join(', ') || 'Non spécifiées'}
+- Nom : ${context.prospect?.name || 'Non spécifié'}
+- Poste : ${context.prospect?.position || 'Non spécifié'}
+- Entreprise : ${context.prospect?.company || 'Non spécifiée'}
+- Localisation : ${context.prospect?.location || 'Non spécifiée'}
+- Secteur : ${context.prospect?.industry || 'Non spécifié'}
+- Headline : ${context.prospect?.headline || 'Non spécifié'}
+- Expériences récentes : ${context.prospect?.experience?.map((exp: any) => `${exp.title} chez ${exp.company}`).join(', ') || 'Non spécifiées'}
+- Compétences : ${context.prospect?.skills?.join(', ') || 'Non spécifiées'}
 
 TEMPLATE DE CAMPAGNE :
-${context.campaign.template}
+${context.campaign?.template || ''}
 
 AUDIENCE CIBLE :
-${JSON.stringify(context.campaign.targetAudience, null, 2)}
+${JSON.stringify(context.campaign?.targetAudience || {}, null, 2)}
 
 PROFIL DE L'EXPÉDITEUR :
-- Profil : ${JSON.stringify(context.sender.profile, null, 2)}
-- Business : ${JSON.stringify(context.sender.business, null, 2)}
-- Style de communication : ${JSON.stringify(context.sender.communicationStyle, null, 2)}
+- Profil : ${JSON.stringify(context.sender?.profile || {}, null, 2)}
+- Business : ${JSON.stringify(context.sender?.business || {}, null, 2)}
+- Style de communication : ${JSON.stringify(context.sender?.communicationStyle || {}, null, 2)}
 
 Instructions :
 1. Personnalise le message en utilisant les informations du prospect
@@ -140,13 +139,13 @@ Génère uniquement le message final, sans explications supplémentaires.`;
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: result.response
     });
   } catch (error) {
     logger.error('Error generating personalized message:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error'
     });
@@ -173,7 +172,7 @@ TECHNIQUES D'OPTIMISATION DU TAUX D'OUVERTURE :
 5. **Preuve sociale** : Référencer des succès similaires (si pertinent)
 
 STYLE DE COMMUNICATION CONFIGURÉ :
-${JSON.stringify(sender.communicationStyle, null, 2)}
+${JSON.stringify(sender?.communicationStyle || {}, null, 2)}
 
 PARAMÈTRES IA :
 - Température : ${aiParameters?.temperature || 0.7}
@@ -202,13 +201,13 @@ app.post('/analyze-sentiment', async (req, res) => {
 
     const result = await aiOrchestrator.analyzeSentiment(message);
 
-    res.json({
+    return res.json({
       success: true,
       ...result
     });
   } catch (error) {
     logger.error('Error analyzing sentiment:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error'
     });
@@ -229,13 +228,13 @@ app.post('/classify-intent', async (req, res) => {
 
     const result = await aiOrchestrator.classifyIntent(message);
 
-    res.json({
+    return res.json({
       success: true,
       ...result
     });
   } catch (error) {
     logger.error('Error classifying intent:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error'
     });
@@ -245,7 +244,7 @@ app.post('/classify-intent', async (req, res) => {
 // Error handling middleware
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', error);
-  res.status(500).json({
+  return res.status(500).json({
     success: false,
     error: 'Internal server error'
   });
