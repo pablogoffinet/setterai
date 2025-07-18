@@ -50,9 +50,9 @@ export class AIOrchestrator {
     try {
       // Debug logging
       console.log('🔍 Debug - Environment variables:');
-      console.log('AZURE_OPENAI_API_KEY exists:', !!process.env.AZURE_OPENAI_API_KEY);
-      console.log('AZURE_OPENAI_ENDPOINT exists:', !!process.env.AZURE_OPENAI_ENDPOINT);
-      console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
+      console.log('AZURE_OPENAI_API_KEY exists:', !!process.env['AZURE_OPENAI_API_KEY']);
+      console.log('AZURE_OPENAI_ENDPOINT exists:', !!process.env['AZURE_OPENAI_ENDPOINT']);
+      console.log('OPENAI_API_KEY exists:', !!process.env['OPENAI_API_KEY']);
       
       // Initialize AI providers - Prioritize Azure OpenAI
       if (process.env['AZURE_OPENAI_API_KEY'] && process.env['AZURE_OPENAI_ENDPOINT']) {

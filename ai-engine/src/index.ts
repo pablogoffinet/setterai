@@ -10,7 +10,7 @@ import { AIOrchestrator } from './aiOrchestrator';
 import { validateEnv } from './utils/environment';
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env['PORT'] || 3001;
 
 // Initialize AI Orchestrator
 const aiOrchestrator = new AIOrchestrator();
