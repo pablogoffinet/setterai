@@ -67,6 +67,7 @@ COPY --from=queue-builder /app/queue-service/package*.json ./queue-service/
 # Réinstaller les dépendances en production
 WORKDIR /app/backend
 RUN npm ci --only=production
+RUN npm list compression
 
 WORKDIR /app/ai-engine
 RUN npm ci --only=production

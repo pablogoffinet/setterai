@@ -40,6 +40,8 @@ services:
         value: http://localhost:3001
       - key: QUEUE_SERVICE_URL
         value: http://localhost:3002
+      - key: PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING
+        value: "1"
 
 
 
