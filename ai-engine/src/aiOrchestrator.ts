@@ -55,19 +55,19 @@ export class AIOrchestrator {
       console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
       
       // Initialize AI providers - Prioritize Azure OpenAI
-      if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+      if (process.env['AZURE_OPENAI_API_KEY'] && process.env['AZURE_OPENAI_ENDPOINT']) {
         console.log('🟡 Attempting to create Azure OpenAI provider...');
-        const openai = new OpenAIProvider(process.env.AZURE_OPENAI_API_KEY, {
-          endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-          apiVersion: process.env.AZURE_OPENAI_API_VERSION,
-          deploymentName: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+        const openai = new OpenAIProvider(process.env['AZURE_OPENAI_API_KEY'], {
+          endpoint: process.env['AZURE_OPENAI_ENDPOINT'],
+          apiVersion: process.env['AZURE_OPENAI_API_VERSION'],
+          deploymentName: process.env['AZURE_OPENAI_DEPLOYMENT_NAME']
         });
         this.providers.set('openai', openai);
         console.log('✅ Azure OpenAI provider set in map, size:', this.providers.size);
         logger.info('✅ Azure OpenAI provider initialized');
-      } else if (process.env.OPENAI_API_KEY) {
+      } else if (process.env['OPENAI_API_KEY']) {
         console.log('🟡 Attempting to create OpenAI provider...');
-        const openai = new OpenAIProvider(process.env.OPENAI_API_KEY);
+        const openai = new OpenAIProvider(process.env['OPENAI_API_KEY']);
         this.providers.set('openai', openai);
         console.log('✅ OpenAI provider set in map, size:', this.providers.size);
         logger.info('✅ OpenAI provider initialized');
@@ -75,14 +75,14 @@ export class AIOrchestrator {
         console.log('❌ Neither AZURE_OPENAI_API_KEY nor OPENAI_API_KEY found in environment');
       }
 
-      if (process.env.CLAUDE_API_KEY) {
-        const claude = new ClaudeProvider(process.env.CLAUDE_API_KEY);
+      if (process.env['CLAUDE_API_KEY']) {
+        const claude = new ClaudeProvider(process.env['CLAUDE_API_KEY']);
         this.providers.set('claude', claude);
         logger.info('✅ Claude provider initialized');
       }
 
-      if (process.env.MISTRAL_API_KEY) {
-        const mistral = new MistralProvider(process.env.MISTRAL_API_KEY);
+      if (process.env['MISTRAL_API_KEY']) {
+        const mistral = new MistralProvider(process.env['MISTRAL_API_KEY']);
         this.providers.set('mistral', mistral);
         logger.info('✅ Mistral provider initialized');
       }

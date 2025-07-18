@@ -2,14 +2,14 @@ import { logger } from '../utils/logger';
 
 export class MistralProvider {
   constructor() {
-    if (!process.env.MISTRAL_API_KEY) {
+    if (!process.env['MISTRAL_API_KEY']) {
       logger.warn('Mistral API key not configured');
     }
   }
 
   async generateCompletion(prompt: string, options: any = {}) {
     try {
-      if (!process.env.MISTRAL_API_KEY) {
+      if (!process.env['MISTRAL_API_KEY']) {
         return {
           success: false,
           error: 'Mistral API key not configured'

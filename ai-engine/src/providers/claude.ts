@@ -2,14 +2,14 @@ import { logger } from '../utils/logger';
 
 export class ClaudeProvider {
   constructor() {
-    if (!process.env.CLAUDE_API_KEY) {
+    if (!process.env['CLAUDE_API_KEY']) {
       logger.warn('Claude API key not configured');
     }
   }
 
   async generateCompletion(prompt: string, options: any = {}) {
     try {
-      if (!process.env.CLAUDE_API_KEY) {
+      if (!process.env['CLAUDE_API_KEY']) {
         return {
           success: false,
           error: 'Claude API key not configured'
