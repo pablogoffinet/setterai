@@ -17,10 +17,10 @@ COPY default.env ./
 # Installer les dépendances racine
 RUN npm ci --only=production
 
-# Copier et installer le backend
+# Copier et installer le backend (avec devDependencies pour build)
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 COPY backend/ ./
 
@@ -29,6 +29,9 @@ RUN npx prisma generate
 
 # Compiler TypeScript
 RUN npm run build
+
+# Nettoyer les devDependencies après build
+RUN npm ci --only=production && npm cache clean --force
 
 # Créer un utilisateur non-root
 RUN addgroup -g 1001 -S nodejs
