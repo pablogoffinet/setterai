@@ -1,11 +1,13 @@
 services:
-  # Service principal (Backend API + AI Engine + Queue Service)
+  # Service principal (Backend API uniquement)
   - type: web
     name: linkedin-prospector-api
     env: docker
     plan: starter
     region: oregon
     healthCheckPath: /health
+    buildCommand: docker build -t linkedin-prospector .
+    startCommand: docker run -p $PORT:3000 linkedin-prospector
     envVars:
       - key: NODE_ENV
         value: production
@@ -36,14 +38,12 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://linkedin-prospector-frontend.onrender.com
-      - key: AI_ENGINE_URL
-        value: http://localhost:3001
-      - key: QUEUE_SERVICE_URL
-        value: http://localhost:3002
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
       - key: PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING
         value: "1"
-
-
 
 databases:
   # Base de données PostgreSQL

@@ -1,4 +1,4 @@
-# 🚀 Guide de Déploiement sur Render
+# 🚀 Guide de Déploiement sur Render - Version Simplifiée
 
 ## 📋 Prérequis
 
@@ -6,9 +6,16 @@
 2. **Repository Git** : Votre code doit être sur GitHub/GitLab
 3. **Clés API** : Préparez vos clés API (OpenAI, Claude, etc.)
 
-## 🔧 Configuration
+## 🔧 Configuration Simplifiée
 
-### 1. Variables d'Environnement sur Render
+### 1. Fichiers de Configuration
+
+Le projet contient maintenant :
+- `render.yaml` - Configuration Render simplifiée
+- `Dockerfile.render` - Dockerfile optimisé pour Render
+- `deploy-render.sh` - Script de test local
+
+### 2. Variables d'Environnement sur Render
 
 Dans votre dashboard Render, configurez ces variables :
 
@@ -35,21 +42,31 @@ UNIPILE_API_URL=https://api8.unipile.com:13813/api/v1
 UNIPILE_WEBHOOK_SECRET=97GMEpPEQzgMEe15gkX0grhxTyZErfk10jEz1-7_b88
 ```
 
-### 2. Déploiement Automatique
+## 🚀 Déploiement
 
-#### Option A : Via render.yaml (Recommandé)
-1. Poussez votre code avec le fichier `render.yaml`
-2. Connectez votre repo à Render
-3. Render détectera automatiquement la configuration
+### Option A : Déploiement Automatique (Recommandé)
 
-#### Option B : Manuel
-1. Créez un nouveau **Web Service** sur Render
-2. Connectez votre repository Git
-3. Configuration :
-   - **Environment** : Docker
-   - **Build Command** : `npm run build`
-   - **Start Command** : `npm start`
-   - **Port** : 3000
+1. **Poussez votre code** :
+```bash
+git add .
+git commit -m "Fix Render deployment - simplified configuration"
+git push origin main
+```
+
+2. **Connectez votre repo à Render** :
+   - Allez sur [render.com](https://render.com)
+   - Créez un nouveau **Web Service**
+   - Connectez votre repository GitHub
+   - Render détectera automatiquement le `render.yaml`
+
+3. **Configurez les variables d'environnement** dans le dashboard Render
+
+### Option B : Test Local Avant Déploiement
+
+```bash
+# Tester la configuration localement
+./deploy-render.sh
+```
 
 ## 🗄️ Base de Données
 
@@ -68,7 +85,7 @@ UNIPILE_WEBHOOK_SECRET=97GMEpPEQzgMEe15gkX0grhxTyZErfk10jEz1-7_b88
 Après le premier déploiement, exécutez les migrations :
 
 ```bash
-# Via Render Shell ou en local avec la DB de production
+# Via Render Shell
 cd backend
 npx prisma migrate deploy
 npx prisma generate
@@ -78,8 +95,9 @@ npx prisma generate
 
 Une fois déployé, vos URLs seront :
 - **API Backend** : `https://linkedin-prospector-api.onrender.com`
-- **Frontend** : `https://linkedin-prospector-frontend.onrender.com`
+- **Health Check** : `https://linkedin-prospector-api.onrender.com/health`
 - **Documentation API** : `https://linkedin-prospector-api.onrender.com/api/docs`
+- **Test Route** : `https://linkedin-prospector-api.onrender.com/test`
 
 ## 🔧 Configuration Webhook Unipile
 
@@ -112,17 +130,16 @@ npm run dev
 
 ### Health Checks
 - **Backend** : `https://linkedin-prospector-api.onrender.com/health`
-- **AI Engine** : `https://linkedin-prospector-api.onrender.com:3001/health`
-- **Queue Service** : `https://linkedin-prospector-api.onrender.com:3002/health`
+- **Test** : `https://linkedin-prospector-api.onrender.com/test`
 
 ### Logs
-Accédez aux logs via le dashboard Render pour chaque service.
+Accédez aux logs via le dashboard Render.
 
 ## 🛠️ Dépannage
 
 ### Erreurs Communes
 
-1. **Port déjà utilisé** : Vérifiez que le port 3000 est libre
+1. **"Not Found"** : Vérifiez que le service est déployé et en cours d'exécution
 2. **Variables d'environnement manquantes** : Vérifiez toutes les variables requises
 3. **Base de données non connectée** : Vérifiez l'URL de connexion PostgreSQL
 4. **Build échoue** : Vérifiez les logs de build dans Render
@@ -134,7 +151,7 @@ Accédez aux logs via le dashboard Render pour chaque service.
 curl https://linkedin-prospector-api.onrender.com/health
 
 # Tester l'API
-curl https://linkedin-prospector-api.onrender.com/api/test
+curl https://linkedin-prospector-api.onrender.com/test
 
 # Vérifier la documentation
 open https://linkedin-prospector-api.onrender.com/api/docs
@@ -153,4 +170,13 @@ En cas de problème :
 Pour mettre à jour votre application :
 1. Poussez vos changements sur Git
 2. Render redéploiera automatiquement
-3. Vérifiez que tout fonctionne après le déploiement 
+3. Vérifiez que tout fonctionne après le déploiement
+
+## 🎯 Changements Majeurs
+
+### Version Simplifiée
+- ✅ Déploiement backend uniquement (plus simple)
+- ✅ Configuration Docker optimisée
+- ✅ Health checks fonctionnels
+- ✅ Variables d'environnement corrigées
+- ✅ Script de test local 

@@ -1,0 +1,147 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        32
+      ],
+      "id": "48cddf7c-673b-46fd-a270-86c748dde3fa",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1_mM-uxN79nwEhifmTPhQz3MHDfo_uteZQUXES3uxFpI",
+          "mode": "list",
+          "cachedResultName": "resultat",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_mM-uxN79nwEhifmTPhQz3MHDfo_uteZQUXES3uxFpI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1474652650,
+          "mode": "list",
+          "cachedResultName": "Sheet 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_mM-uxN79nwEhifmTPhQz3MHDfo_uteZQUXES3uxFpI/edit#gid=1474652650"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -304,
+        -32
+      ],
+      "id": "575b44f7-031e-4d1a-a86d-939c095f3e9d",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ji0MM3v5GxslHSKY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.templated.io/v1/render",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 4147e42a-9dad-4f2e-88ae-df3c2133b922"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template\": \"d3d6cbee-4f8c-4e2b-b3e7-d4855403cd30\",\n  \"format\": \"jpg\",\n  \"layers\": {\n    \"image-1\": {\n      \"image_url\": \"https://templated-assets.s3.amazonaws.com/upload/1aaa5ba5-6ed3-4ed4-97e3-a79112c14001.jpg\"\n    },\n    \"text1\": {\n      \"text\": \"{{ $json['Pl.'] }}\",\n      \"color\": \"rgba(255, 255, 255, 0.88)\"\n    },\n    \"text2\": {\n      \"text\": \"{{ $json.Temps }}\",\n      \"color\": \"rgb(146, 222, 195)\"\n    },\n    \"prenom\": {\n      \"text\": \"={{ $json.Nom.replace(/!\\[\\]\\(.*\\)/, '').trim() }}\",\n      \"color\": \"rgba(255, 255, 255, 0.88)\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        16
+      ],
+      "id": "fdde645e-8243-4392-ad32-6142874ef390",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -96,
+        -32
+      ],
+      "id": "935cf87b-8ee7-4f93-a672-84485ba98ace",
+      "name": "Loop Over Items"
+    }
+  ],
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e2656d122743694a232be18e6e1f9278de6d923ec708baead9aba39d1a2e24b"
+  }
+} 
