@@ -6,8 +6,6 @@ services:
     plan: starter
     region: oregon
     healthCheckPath: /health
-    buildCommand: docker build -t linkedin-prospector .
-    startCommand: docker run -p $PORT:3000 linkedin-prospector
     envVars:
       - key: NODE_ENV
         value: production
