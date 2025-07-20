@@ -30,6 +30,9 @@ RUN npx prisma generate
 # Compiler TypeScript
 RUN npm run build
 
+# Vérifier que le build a bien créé les fichiers
+RUN ls -la dist/ && echo "Build completed successfully"
+
 # Nettoyer les devDependencies après build
 RUN npm ci --only=production && npm cache clean --force
 
@@ -48,5 +51,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
-# Commande de démarrage
-CMD ["npm", "start"] 
+# Script de démarrage avec logs
+CMD ["sh", "-c", "echo 'Starting app on port 3000...' && npm start"] 
