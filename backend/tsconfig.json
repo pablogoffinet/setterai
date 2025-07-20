@@ -36,7 +36,6 @@
       "@/utils/*": ["utils/*"],
       "@/types/*": ["types/*"]
     },
-    "suppressImplicitAnyIndexErrors": true,
     "noErrorTruncation": true
   },
   "include": [
