@@ -27,6 +27,9 @@ COPY backend/ ./
 # Générer le client Prisma
 RUN npx prisma generate
 
+# Compiler TypeScript
+RUN npm run build
+
 # Créer un utilisateur non-root
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S appuser -u 1001
