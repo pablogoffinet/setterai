@@ -122,7 +122,6 @@ export class WebhooksController {
         where: { id: conversation.id },
         data: {
           lastMessageAt: new Date(messageData.timestamp),
-          unreadCount: { increment: 1 },
           updatedAt: new Date()
         }
       });
@@ -288,12 +287,23 @@ export class WebhooksController {
     });
 
     if (!conversation) {
+      // Récupérer le userId depuis le channel
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelId },
+        select: { userId: true }
+      });
+
+      if (!channel) {
+        throw new Error(`Channel not found: ${channelId}`);
+      }
+
       // Créer une nouvelle conversation
       conversation = await prisma.conversation.create({
         data: {
+          userId: channel.userId,
           channelId,
           externalId: chatId,
-          name: this.generateConversationName(sender, recipients),
+          title: this.generateConversationName(sender, recipients),
           status: 'ACTIVE',
           metadata: {
             sender,
@@ -317,16 +327,16 @@ export class WebhooksController {
     return names.length > 0 ? names.join(', ') : 'New Conversation';
   }
 
-  private mapUnipileContentType(unipileType: string): string {
-    const typeMap: Record<string, string> = {
-      'TEXT': 'text',
-      'IMAGE': 'image',
-      'FILE': 'file',
-      'AUDIO': 'audio',
-      'VIDEO': 'video',
-      'LINK': 'link'
+  private mapUnipileContentType(unipileType: string): 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO' | 'LINK' {
+    const typeMap: Record<string, 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO' | 'LINK'> = {
+      'TEXT': 'TEXT',
+      'IMAGE': 'IMAGE',
+      'FILE': 'FILE',
+      'AUDIO': 'AUDIO',
+      'VIDEO': 'VIDEO',
+      'LINK': 'LINK'
     };
-    return typeMap[unipileType] || 'text';
+    return typeMap[unipileType] || 'TEXT';
   }
 
   private mapUnipileMessageStatus(unipileStatus: string): string {
@@ -408,8 +418,12 @@ export class WebhooksController {
 
       if (aiResponse.response) {
         // Envoyer la réponse via Unipile
+        const unipileAccountId = (channel.metadata && typeof channel.metadata === 'object' && 'unipile_account_id' in channel.metadata) 
+          ? (channel.metadata as any).unipile_account_id 
+          : null;
+        
         await this.sendAIResponse(
-          channel.metadata?.unipile_account_id,
+          unipileAccountId,
           message.conversation.externalId,
           aiResponse.response
         );
@@ -421,7 +435,7 @@ export class WebhooksController {
             channelId: channel.id,
             direction: 'OUTBOUND',
             content: aiResponse.response,
-            contentType: 'text',
+            contentType: 'TEXT',
             status: 'PENDING',
             metadata: {
               ai_generated: true,

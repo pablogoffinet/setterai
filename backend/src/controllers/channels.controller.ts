@@ -202,7 +202,9 @@ export class ChannelsController {
 
       // Obtenir le statut depuis Unipile si disponible
       let unipileStatus = null;
-      const unipileAccountId = channel.metadata?.unipile_account_id;
+      const unipileAccountId = (channel.metadata && typeof channel.metadata === 'object' && 'unipile_account_id' in channel.metadata) 
+        ? (channel.metadata as any).unipile_account_id 
+        : null;
       if (unipileAccountId) {
         const unipileResult = await unipileService.getAccount(unipileAccountId);
         if (unipileResult.success) {
@@ -325,7 +327,9 @@ export class ChannelsController {
       });
 
       // Déconnecter du service Unipile si applicable
-      const unipileAccountId = channel.metadata?.unipile_account_id;
+      const unipileAccountId = (channel.metadata && typeof channel.metadata === 'object' && 'unipile_account_id' in channel.metadata) 
+        ? (channel.metadata as any).unipile_account_id 
+        : null;
       if (unipileAccountId) {
         await unipileService.disconnectAccount(unipileAccountId);
       }
