@@ -108,11 +108,11 @@ export class WebhooksController {
           content: messageData.content,
           contentType: this.mapUnipileContentType(messageData.type),
           status: 'DELIVERED',
-          metadata: {
+          metadata: JSON.parse(JSON.stringify({
             unipile_data: messageData,
             sender: messageData.sender,
             attachments: messageData.attachments || []
-          },
+          })),
           createdAt: new Date(messageData.timestamp)
         }
       });
@@ -155,9 +155,9 @@ export class WebhooksController {
         },
         data: {
           status: 'SENT',
-          metadata: {
+          metadata: JSON.parse(JSON.stringify({
             unipile_data: messageData
-          }
+          }))
         }
       });
 
@@ -182,10 +182,10 @@ export class WebhooksController {
           externalId: messageData.id
         },
         data: {
-          status: this.mapUnipileMessageStatus(messageData.status),
-          metadata: {
+          status: this.mapUnipileMessageStatus(messageData.status) as any,
+          metadata: JSON.parse(JSON.stringify({
             unipile_data: messageData
-          }
+          }))
         }
       });
 
@@ -212,10 +212,10 @@ export class WebhooksController {
           externalId: chatData.id
         },
         data: {
-          metadata: {
+          metadata: JSON.parse(JSON.stringify({
             unipile_chat_data: chatData,
             last_updated: new Date().toISOString()
-          }
+          }))
         }
       });
 
@@ -401,18 +401,19 @@ export class WebhooksController {
       }
 
       // Générer la réponse IA
+      const settings = channel.settings as any;
       const aiResponse = await aiEngineService.generateResponse({
         message: message.content,
         agentConfig: {
-          type: channel.settings?.ai?.agentType || 'CUSTOMER_SUPPORT',
-          model: channel.settings?.ai?.model || 'gpt-4o',
-          temperature: channel.settings?.ai?.temperature || 0.7,
-          maxTokens: channel.settings?.ai?.maxTokens || 300
+          type: settings?.ai?.agentType || 'CUSTOMER_SUPPORT',
+          model: settings?.ai?.model || 'gpt-4o',
+          temperature: settings?.ai?.temperature || 0.7,
+          maxTokens: settings?.ai?.maxTokens || 300
         },
         context: {
           conversationHistory: await this.getConversationHistory(conversationId),
           channelType: channel.type,
-          userProfile: channel.settings?.ai?.userProfile
+          userProfile: settings?.ai?.userProfile
         }
       });
 
