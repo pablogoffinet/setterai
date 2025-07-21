@@ -371,7 +371,8 @@ export class WebhooksController {
 
       // Vérifier si la réponse IA est activée pour ce canal
       const channel = message.conversation.channel;
-      const aiEnabled = channel.settings?.ai?.enabled;
+      const settings = channel.settings as any;
+      const aiEnabled = settings?.ai?.enabled;
       
       if (!aiEnabled) {
         logger.debug('AI response not enabled for channel', { channelId: channel.id });
