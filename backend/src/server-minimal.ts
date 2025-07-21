@@ -3,6 +3,27 @@ import cors from 'cors';
 
 const app = express();
 
+// 🔒 PROTECTION CRITIQUE contre les vulnérabilités Multer
+process.on("uncaughtException", (err) => {
+  console.error('🚨 UNCAUGHT EXCEPTION:', err.message);
+  
+  // Protection spécifique contre les bugs Multer connus
+  if (err.message === "Unexpected end of form" || 
+      err.message.includes("malformed multipart") ||
+      err.message.includes("empty field name")) {
+    console.warn('⚠️ Multer vulnerability detected - continuing...');
+    return; // Continue sans crasher
+  }
+  
+  // Pour toute autre exception critique, arrêter proprement
+  console.error('💥 CRITICAL ERROR - Shutting down gracefully...');
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error('🚨 UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
 // Basic middleware
 app.use(cors());
 app.use(express.json());
