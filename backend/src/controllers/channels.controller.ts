@@ -65,6 +65,14 @@ export class ChannelsController {
       const encryptedCredentials = await this.encryptCredentials(credentials);
 
       // Créer le canal dans la base de données
+      const prisma = getPrisma();
+      if (!prisma) {
+        return res.status(503).json({
+          success: false,
+          error: { message: 'Database not available' }
+        });
+      }
+      
       const channel = await prisma.channel.create({
         data: {
           userId,
