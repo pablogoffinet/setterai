@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "render-build": "npm install && npx prisma generate && npm run build",
-    "start": "node dist/server.js",
+    "start": "node dist/server-simple.js",
     "start:full": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -5,9 +5,7 @@ import { environment } from '../config/environment';
 import { UnipileWebhookEvent, UnipileMessage, UnipileChat } from '../types/unipile';
 import { UnipileService } from '../services/unipile.service';
 import { AIEngineService } from '../services/ai-engine.service';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getPrisma } from '../config/database';
 const unipileService = new UnipileService();
 const aiEngineService = new AIEngineService();
 
@@ -99,6 +97,12 @@ export class WebhooksController {
       );
 
       // Créer le message dans la base de données
+      const prisma = getPrisma();
+      if (!prisma) {
+        logger.warn('Database not available, skipping message storage');
+        return;
+      }
+      
       const message = await prisma.message.create({
         data: {
           conversationId: conversation.id,

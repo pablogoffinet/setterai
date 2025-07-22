@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { UnipileService } from '../services/unipile.service';
 import { UnipileCredentials } from '../types/unipile';
@@ -12,7 +12,7 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-const prisma = new PrismaClient();
+// Prisma will be imported via getPrisma() when needed
 const unipileService = new UnipileService();
 
 export class ChannelsController {
