@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import apiService from '../lib/api';
 import { 
   MessageSquare, 
   Users, 
@@ -16,6 +17,22 @@ import {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [apiStatus, setApiStatus] = useState<string>('loading');
+
+  useEffect(() => {
+    const checkApiStatus = async () => {
+      try {
+        const health = await apiService.getHealth();
+        setApiStatus('connected');
+        console.log('API Health:', health);
+      } catch (error) {
+        setApiStatus('error');
+        console.error('API Error:', error);
+      }
+    };
+
+    checkApiStatus();
+  }, []);
 
   const stats = [
     { title: 'Messages envoyés', value: '1,234', change: '+12%', icon: MessageSquare },
