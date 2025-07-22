@@ -29,8 +29,8 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Installer dumb-init pour une gestion propre des signaux
-RUN apk add --no-cache dumb-init
+# Installer dumb-init et les dépendances OpenSSL pour Prisma
+RUN apk add --no-cache dumb-init openssl1.1-compat
 
 # Créer un utilisateur non-root
 RUN addgroup -g 1001 -S nodejs
