@@ -30,31 +30,8 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports in production
-if (env.NODE_ENV === 'production') {
-  // Error logs
-  transports.push(
-    new DailyRotateFile({
-      filename: 'logs/error-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      level: 'error',
-      format: fileFormat,
-      maxSize: '20m',
-      maxFiles: '14d',
-    })
-  );
-
-  // Combined logs
-  transports.push(
-    new DailyRotateFile({
-      filename: 'logs/combined-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      format: fileFormat,
-      maxSize: '20m',
-      maxFiles: '14d',
-    })
-  );
-}
+// Skip file logs in production on Render (no write permissions)
+// Use console logging only for cloud deployments
 
 // Create logger instance
 export const logger = winston.createLogger({
