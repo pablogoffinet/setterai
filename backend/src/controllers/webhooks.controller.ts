@@ -401,8 +401,7 @@ export class WebhooksController {
         return;
       }
 
-      // Générer la réponse IA
-      const settings = channel.settings as any;
+      // Générer la réponse IA en utilisant les settings déjà déclarés
       const aiResponse = await aiEngineService.generateResponse({
         message: message.content,
         agentConfig: {
