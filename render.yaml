@@ -1,21 +1,19 @@
 services:
-  # Service principal (Backend API uniquement)
+  # Service Backend API - Configuration simplifiée
   - type: web
     name: linkedin-prospector-api
-    env: docker
+    env: node
     plan: starter
     region: oregon
+    buildCommand: cd backend && npm run render-build
+    startCommand: cd backend && npm start
     healthCheckPath: /health
-    # Render cherche automatiquement ./Dockerfile par défaut
-    # Nous devons donc renommer Dockerfile.render vers Dockerfile
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
         sync: false
       - key: OPENAI_API_KEY
         sync: false
@@ -36,11 +34,4 @@ databases:
     databaseName: linkedin_prospector
     user: linkedin_prospector_user
     plan: starter
-    region: oregon
-
-  # Redis pour les queues
-  - name: linkedin-prospector-redis
-    databaseName: linkedin_prospector_redis
-    plan: starter
-    region: oregon
-    maxmemoryPolicy: allkeys-lru 
+    region: oregon 
