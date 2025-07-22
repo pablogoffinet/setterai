@@ -126,6 +126,13 @@ export class ChannelsController {
    */
   async listChannels(req: AuthenticatedRequest, res: Response) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        return res.status(503).json({
+          success: false,
+          error: { message: 'Database not available' }
+        });
+      }
       const userId = req.user?.id;
 
       if (!userId) {
@@ -176,6 +183,13 @@ export class ChannelsController {
    */
   async getChannel(req: AuthenticatedRequest, res: Response) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        return res.status(503).json({
+          success: false,
+          error: { message: 'Database not available' }
+        });
+      }
       const { channelId } = req.params;
       const userId = req.user?.id;
 
@@ -242,6 +256,13 @@ export class ChannelsController {
    */
   async syncChannel(req: AuthenticatedRequest, res: Response) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        return res.status(503).json({
+          success: false,
+          error: { message: 'Database not available' }
+        });
+      }
       const { channelId } = req.params;
       const userId = req.user?.id;
 
@@ -304,6 +325,13 @@ export class ChannelsController {
    */
   async disconnectChannel(req: AuthenticatedRequest, res: Response) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        return res.status(503).json({
+          success: false,
+          error: { message: 'Database not available' }
+        });
+      }
       const { channelId } = req.params;
       const userId = req.user?.id;
 
@@ -363,6 +391,13 @@ export class ChannelsController {
    */
   async getChannelConversations(req: AuthenticatedRequest, res: Response) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        return res.status(503).json({
+          success: false,
+          error: { message: 'Database not available' }
+        });
+      }
       const { channelId } = req.params;
       const userId = req.user?.id;
 

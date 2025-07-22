@@ -149,6 +149,11 @@ export class WebhooksController {
    */
   private async handleMessageSent(event: UnipileWebhookEvent) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        logger.warn('Database not available, skipping message update');
+        return;
+      }
       const messageData = event.data as UnipileMessage;
       
       // Mettre à jour le statut du message s'il existe déjà
@@ -179,6 +184,11 @@ export class WebhooksController {
    */
   private async handleMessageStatusUpdate(event: UnipileWebhookEvent) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        logger.warn('Database not available, skipping status update');
+        return;
+      }
       const messageData = event.data as UnipileMessage;
       
       await prisma.message.updateMany({
@@ -208,6 +218,11 @@ export class WebhooksController {
    */
   private async handleChatUpdated(event: UnipileWebhookEvent) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        logger.warn('Database not available, skipping chat update');
+        return;
+      }
       const chatData = event.data as UnipileChat;
       
       // Mettre à jour les métadonnées de la conversation si elle existe
@@ -237,6 +252,11 @@ export class WebhooksController {
    */
   private async handleAccountDisconnected(event: UnipileWebhookEvent) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        logger.warn('Database not available, skipping account disconnect handling');
+        return;
+      }
       // Désactiver tous les canaux associés à ce compte Unipile
       await prisma.channel.updateMany({
         where: {
@@ -266,6 +286,10 @@ export class WebhooksController {
   // Méthodes utilitaires
 
   private async findChannelByUnipileAccountId(unipileAccountId: string) {
+    const prisma = getPrisma();
+    if (!prisma) {
+      throw new Error('Database not available');
+    }
     return await prisma.channel.findFirst({
       where: {
         metadata: {
@@ -282,6 +306,10 @@ export class WebhooksController {
     sender: any,
     recipients: any[]
   ) {
+    const prisma = getPrisma();
+    if (!prisma) {
+      throw new Error('Database not available');
+    }
     // Chercher une conversation existante
     let conversation = await prisma.conversation.findFirst({
       where: {
@@ -356,6 +384,11 @@ export class WebhooksController {
 
   private async triggerAIResponse(conversationId: string, messageId: string) {
     try {
+      const prisma = getPrisma();
+      if (!prisma) {
+        logger.warn('Database not available, skipping AI response');
+        return;
+      }
       // Récupérer le message et la conversation
       const message = await prisma.message.findUnique({
         where: { id: messageId },
@@ -482,6 +515,10 @@ export class WebhooksController {
   }
 
   private async getConversationHistory(conversationId: string): Promise<Array<{ role: 'user' | 'assistant'; content: string }>> {
+    const prisma = getPrisma();
+    if (!prisma) {
+      return [];
+    }
     const messages = await prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'asc' },
@@ -495,6 +532,10 @@ export class WebhooksController {
   }
 
   private async getConversationIdFromChatId(chatId: string): Promise<string> {
+    const prisma = getPrisma();
+    if (!prisma) {
+      throw new Error('Database not available');
+    }
     const conversation = await prisma.conversation.findFirst({
       where: { externalId: chatId }
     });
