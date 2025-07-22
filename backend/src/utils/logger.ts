@@ -1,6 +1,6 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { environment } from '@/config/environment';
+import { environment } from '../config/environment';
 
 const env = environment;
 

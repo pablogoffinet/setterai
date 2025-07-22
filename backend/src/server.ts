@@ -5,21 +5,21 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 
-import { logger } from '@/utils/logger';
-import { errorHandler } from '@/middleware/errorHandler';
-import { notFound } from '@/middleware/notFound';
-import { environment } from '@/config/environment';
-import { connectDatabase } from '@/config/database';
-import { connectRedis } from '@/config/redis';
-import { setupSwagger } from '@/config/swagger';
+import { logger } from './utils/logger';
+import { errorHandler } from './middleware/errorHandler';
+import { notFound } from './middleware/notFound';
+import { environment } from './config/environment';
+import { connectDatabase } from './config/database';
+import { connectRedis } from './config/redis';
+import { setupSwagger } from './config/swagger';
 
 // Routes
-import authRoutes from '@/routes/auth';
-import conversationRoutes from '@/routes/conversations';
-import agentRoutes from '@/routes/agents';
-import channelRoutes from '@/routes/channels';
-import campaignRoutes from '@/routes/campaigns';
-import webhookRoutes from '@/routes/webhooks';
+import authRoutes from './routes/auth';
+import conversationRoutes from './routes/conversations';
+import agentRoutes from './routes/agents';
+import channelRoutes from './routes/channels';
+import campaignRoutes from './routes/campaigns';
+import webhookRoutes from './routes/webhooks';
 import testRoutes from './routes/test';
 
 const app = express();
