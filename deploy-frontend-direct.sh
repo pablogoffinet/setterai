@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# 🚀 Déploiement Frontend Immédiat - LinkedIn Prospector
-# Déploie le frontend avec un nom unique
+# 🚀 Déploiement Direct Frontend - LinkedIn Prospector
+# Déploie le frontend directement sur Render
 
 set -e
 
-echo "🚀 Déploiement Frontend Immédiat - LinkedIn Prospector"
-echo "====================================================="
+echo "🚀 Déploiement Direct Frontend - LinkedIn Prospector"
+echo "==================================================="
 
 # Couleurs
 GREEN='\033[0;32m'
@@ -15,10 +15,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Configuration avec nom unique
+# Configuration
 REPO_URL="https://github.com/pablogoffinet/setterai.git"
 BACKEND_URL="https://setterai-729q.onrender.com"
-FRONTEND_NAME="setterai-frontend-$(date +%s)"
+FRONTEND_NAME="linkedin-prospector-frontend"
 
 echo -e "${GREEN}✅ Configuration prête !${NC}"
 echo ""
@@ -34,7 +34,7 @@ else
 fi
 
 echo ""
-echo -e "${BLUE}🚀 DÉPLOIEMENT IMMÉDIAT:${NC}"
+echo -e "${BLUE}🚀 DÉPLOIEMENT DIRECT:${NC}"
 echo ""
 echo -e "${YELLOW}ÉTAPE 1: Accès à Render${NC}"
 echo "   🌐 Ouvrez: https://render.com"
@@ -87,33 +87,27 @@ echo "Cliquez sur le lien ci-dessous:"
 echo -e "${BLUE}🔗 https://render.com${NC}"
 echo ""
 
-# Créer un script de vérification avec le nom unique
+# Créer un script de vérification rapide
 echo -e "${BLUE}🔍 Script de vérification:${NC}"
-cat > check-frontend-unique.sh << EOF
+cat > check-frontend-quick.sh << 'EOF'
 #!/bin/bash
-FRONTEND_URL="https://$FRONTEND_NAME.onrender.com"
-echo "🔍 Vérification du frontend..."
-for i in {1..20}; do
-    RESPONSE=\$(curl -s "\$FRONTEND_URL" || echo "ERROR")
-    if [[ "\$RESPONSE" != "ERROR" && "\$RESPONSE" != "Not Found" ]]; then
-        echo "✅ Frontend déployé avec succès!"
-        echo "🌐 URL: \$FRONTEND_URL"
-        break
-    else
-        echo "⏳ Tentative \$i/20 - Déploiement en cours..."
-        sleep 30
-    fi
-done
+FRONTEND_URL="https://linkedin-prospector-frontend.onrender.com"
+echo "🔍 Vérification rapide du frontend..."
+RESPONSE=$(curl -s "$FRONTEND_URL" || echo "ERROR")
+if [[ "$RESPONSE" != "ERROR" && "$RESPONSE" != "Not Found" ]]; then
+    echo "✅ Frontend déployé avec succès!"
+    echo "🌐 URL: $FRONTEND_URL"
+else
+    echo "⏳ Frontend non encore déployé"
+fi
 EOF
 
-chmod +x check-frontend-unique.sh
-echo -e "${GREEN}✅ Script de vérification créé: ./check-frontend-unique.sh${NC}"
+chmod +x check-frontend-quick.sh
+echo -e "${GREEN}✅ Script de vérification créé: ./check-frontend-quick.sh${NC}"
 
 echo ""
 echo -e "${GREEN}🎉 Instructions de déploiement prêtes !${NC}"
 echo ""
 echo -e "${BLUE}💡 Pour vérifier le déploiement:${NC}"
-echo "   ./check-frontend-unique.sh"
-echo ""
-echo -e "${YELLOW}📝 Note: Nom de service unique utilisé: $FRONTEND_NAME${NC}"
+echo "   ./check-frontend-quick.sh"
 echo "" 
