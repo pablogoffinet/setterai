@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: setterai-ui
+    env: node
+    plan: starter
+    region: oregon
+    repo: https://github.com/pablogoffinet/setterai.git
+    branch: main
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: NEXT_PUBLIC_API_URL
+        value: https://setterai-729q.onrender.com
