@@ -40,8 +40,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
       - key: NEXT_PUBLIC_API_URL
         value: https://setterai-729q.onrender.com
 
