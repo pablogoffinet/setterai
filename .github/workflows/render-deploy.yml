@@ -1,0 +1,28 @@
+name: Deploy to Render (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      blueprint:
+        description: 'Use render.yaml blueprint'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Deploy via Render Blueprint API
+        if: ${{ github.event.inputs.blueprint == 'true' }}
+        env:
+          RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Triggering Render Blueprint deploy for $REPO"
+          curl -s -X POST \
+            -H "Authorization: Bearer $RENDER_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\n              \"repository\": \"https://github.com/${REPO}.git\",\n              \"branch\": \"main\"\n            }" \
+            https://api.render.com/v1/blueprints | jq '.' || true
