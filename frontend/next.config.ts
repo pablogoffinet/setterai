@@ -8,9 +8,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

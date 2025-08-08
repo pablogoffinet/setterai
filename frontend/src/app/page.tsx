@@ -1,57 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import apiService from '../lib/api';
-import { 
-  MessageSquare, 
-  Users, 
-  BarChart3, 
-  Settings, 
-  Plus,
-  Linkedin,
-  Mail,
-  MessageCircle,
-  TrendingUp,
-  Activity
-} from 'lucide-react';
+import { useState } from 'react';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [apiStatus, setApiStatus] = useState<string>('loading');
-
-  useEffect(() => {
-    const checkApiStatus = async () => {
-      try {
-        const health = await apiService.getHealth();
-        setApiStatus('connected');
-        console.log('API Health:', health);
-      } catch (error) {
-        setApiStatus('error');
-        console.error('API Error:', error);
-      }
-    };
-
-    checkApiStatus();
-  }, []);
 
   const stats = [
-    { title: 'Messages envoyés', value: '1,234', change: '+12%', icon: MessageSquare },
-    { title: 'Prospects contactés', value: '567', change: '+8%', icon: Users },
-    { title: 'Taux de réponse', value: '23%', change: '+5%', icon: BarChart3 },
-    { title: 'Conversions', value: '89', change: '+15%', icon: TrendingUp },
+    { title: 'Messages envoyés', value: '1,234', change: '+12%' },
+    { title: 'Prospects contactés', value: '567', change: '+8%' },
+    { title: 'Taux de réponse', value: '23%', change: '+5%' },
+    { title: 'Conversions', value: '89', change: '+15%' },
   ];
 
   const recentActivities = [
-    { type: 'message', content: 'Message envoyé à John Doe', time: '2 min ago', status: 'sent' },
-    { type: 'connection', content: 'Demande de connexion acceptée', time: '5 min ago', status: 'success' },
-    { type: 'prospect', content: 'Nouveau prospect ajouté', time: '10 min ago', status: 'info' },
-    { type: 'campaign', content: 'Campagne "Tech Startups" lancée', time: '1h ago', status: 'success' },
+    { content: 'Message envoyé à John Doe', time: '2 min ago', status: 'sent' },
+    { content: 'Demande de connexion acceptée', time: '5 min ago', status: 'success' },
+    { content: 'Nouveau prospect ajouté', time: '10 min ago', status: 'info' },
+    { content: 'Campagne "Tech Startups" lancée', time: '1h ago', status: 'success' },
   ];
 
   const channels = [
-    { name: 'LinkedIn Pro', type: 'linkedin', status: 'connected', messages: 234 },
-    { name: 'Email Marketing', type: 'email', status: 'connected', messages: 156 },
-    { name: 'WhatsApp Business', type: 'whatsapp', status: 'disconnected', messages: 0 },
+    { name: 'LinkedIn Pro', status: 'connected', messages: 234 },
+    { name: 'Email Marketing', status: 'connected', messages: 156 },
+    { name: 'WhatsApp Business', status: 'disconnected', messages: 0 },
   ];
 
   return (
@@ -65,7 +36,6 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <a href="/campaigns" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <Plus className="w-4 h-4 inline mr-2" />
                 Nouvelle campagne
               </a>
             </div>
@@ -80,9 +50,7 @@ export default function Dashboard() {
           {stats.map((stat, index) => (
             <div key={index} className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <stat.icon className="h-8 w-8 text-blue-600" />
-                </div>
+                <div className="flex-shrink-0 w-8 h-8 rounded bg-blue-100" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">{stat.title}</p>
                   <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
@@ -98,10 +66,10 @@ export default function Dashboard() {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6">
               {[
-                { id: 'overview', name: 'Vue d\'ensemble', icon: Activity },
-                { id: 'campaigns', name: 'Campagnes', icon: MessageSquare },
-                { id: 'prospects', name: 'Prospects', icon: Users },
-                { id: 'analytics', name: 'Analytics', icon: BarChart3 },
+                { id: 'overview', name: "Vue d'ensemble" },
+                { id: 'campaigns', name: 'Campagnes' },
+                { id: 'prospects', name: 'Prospects' },
+                { id: 'analytics', name: 'Analytics' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -112,7 +80,7 @@ export default function Dashboard() {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <tab.icon className="w-4 h-4 mr-2" />
+                  <span className="w-4 h-4 mr-2 rounded bg-gray-300 inline-block" />
                   {tab.name}
                 </button>
               ))}
@@ -148,14 +116,7 @@ export default function Dashboard() {
                     {channels.map((channel, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-lg ${
-                            channel.type === 'linkedin' ? 'bg-blue-100' :
-                            channel.type === 'email' ? 'bg-green-100' : 'bg-gray-100'
-                          }`}>
-                            {channel.type === 'linkedin' && <Linkedin className="w-5 h-5 text-blue-600" />}
-                            {channel.type === 'email' && <Mail className="w-5 h-5 text-green-600" />}
-                            {channel.type === 'whatsapp' && <MessageCircle className="w-5 h-5 text-gray-600" />}
-                          </div>
+                          <div className="p-2 rounded-lg bg-gray-100 w-5 h-5" />
                           <div>
                             <p className="font-medium text-gray-900">{channel.name}</p>
                             <p className="text-sm text-gray-500">{channel.messages} messages</p>
@@ -177,12 +138,10 @@ export default function Dashboard() {
 
             {activeTab === 'campaigns' && (
               <div className="text-center py-12">
-                <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune campagne</h3>
                 <p className="mt-1 text-sm text-gray-500">Commencez par créer votre première campagne de prospection.</p>
                 <div className="mt-6">
                   <a href="/campaigns" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    <Plus className="w-4 h-4 inline mr-2" />
                     Créer une campagne
                   </a>
                 </div>
@@ -191,12 +150,10 @@ export default function Dashboard() {
 
             {activeTab === 'prospects' && (
               <div className="text-center py-12">
-                <Users className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun prospect</h3>
                 <p className="mt-1 text-sm text-gray-500">Ajoutez vos premiers prospects pour commencer la prospection.</p>
                 <div className="mt-6">
                   <a href="/prospects" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    <Plus className="w-4 h-4 inline mr-2" />
                     Ajouter un prospect
                   </a>
                 </div>
@@ -205,7 +162,6 @@ export default function Dashboard() {
 
             {activeTab === 'analytics' && (
               <div className="text-center py-12">
-                <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">Analytics en cours</h3>
                 <p className="mt-1 text-sm text-gray-500">Les données d'analyse apparaîtront ici une fois que vous aurez commencé à utiliser la plateforme.</p>
                 <div className="mt-6">
