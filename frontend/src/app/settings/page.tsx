@@ -13,7 +13,7 @@ import {
   EyeOff,
   Copy,
   Check
-} from 'lucide-react';
+} from '@/lib/icons';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');

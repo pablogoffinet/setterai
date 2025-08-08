@@ -16,7 +16,7 @@ import {
   Trash2,
   MessageSquare,
   UserPlus
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface Prospect {
   id: string;

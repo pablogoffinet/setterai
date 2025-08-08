@@ -19,7 +19,7 @@ import {
   TrendingUp,
   Award,
   Star
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface AIProfile {
   personalInfo: {

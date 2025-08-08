@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Play, Pause, Users, MessageSquare, TrendingUp, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Play, Pause, Users, MessageSquare, TrendingUp, Eye } from '@/lib/icons';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
