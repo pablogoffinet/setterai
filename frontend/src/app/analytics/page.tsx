@@ -1,18 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  MessageSquare,
-  Calendar,
-  Filter,
-  Download,
-  Eye,
-  MousePointer,
-  Target
-} from 'lucide-react';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
@@ -48,12 +36,14 @@ export default function AnalyticsPage() {
   ];
 
   const getActivityIcon = (type: string) => {
+    const base = 'inline-block rounded-full mr-2';
+    const cls = (c: string) => `${base} ${c}`;
     switch (type) {
-      case 'conversion': return <Target className="w-4 h-4 text-green-600" />;
-      case 'response': return <MessageSquare className="w-4 h-4 text-blue-600" />;
-      case 'prospect': return <Users className="w-4 h-4 text-purple-600" />;
-      case 'campaign': return <TrendingUp className="w-4 h-4 text-orange-600" />;
-      default: return <Eye className="w-4 h-4 text-gray-600" />;
+      case 'conversion': return <span className={cls('w-3 h-3 bg-green-600')} />;
+      case 'response': return <span className={cls('w-3 h-3 bg-blue-600')} />;
+      case 'prospect': return <span className={cls('w-3 h-3 bg-purple-600')} />;
+      case 'campaign': return <span className={cls('w-3 h-3 bg-orange-600')} />;
+      default: return <span className={cls('w-3 h-3 bg-gray-400')} />;
     }
   };
 
@@ -88,7 +78,7 @@ export default function AnalyticsPage() {
                 <option value="1y">1 an</option>
               </select>
               <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
-                <Download className="w-4 h-4 mr-2" />
+                <span className="w-4 h-4 mr-2 rounded bg-white/40 inline-block" />
                 Exporter
               </button>
             </div>
@@ -102,7 +92,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600" />
+              <span className="h-8 w-8 rounded bg-blue-100" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total prospects</p>
                 <p className="text-2xl font-semibold text-gray-900">1,280</p>
@@ -112,7 +102,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <MessageSquare className="h-8 w-8 text-green-600" />
+              <span className="h-8 w-8 rounded bg-green-100" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Taux de réponse</p>
                 <p className="text-2xl font-semibold text-gray-900">16.2%</p>
@@ -122,7 +112,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <Target className="h-8 w-8 text-purple-600" />
+              <span className="h-8 w-8 rounded bg-purple-100" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Taux de conversion</p>
                 <p className="text-2xl font-semibold text-gray-900">8.9%</p>
@@ -132,7 +122,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <TrendingUp className="h-8 w-8 text-orange-600" />
+              <span className="h-8 w-8 rounded bg-orange-100" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Revenus générés</p>
                 <p className="text-2xl font-semibold text-gray-900">€45,200</p>
