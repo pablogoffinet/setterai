@@ -32,11 +32,11 @@ export default function SettingsPage() {
   });
 
   const [apiSettings, setApiSettings] = useState({
-    openaiKey: 'sk-...',
-    azureEndpoint: 'https://scaile.openai.azure.com',
-    azureKey: 'En9b6ldiwOhVuO0OCLm6CJGhMCPZl1dkdfGDLtrk7dEWc5tWCaOKJQQJ99BEAC5T7U2XJ3w3AAABACOGnjdC',
-    unipileKey: 'up_...',
-    webhookUrl: 'https://your-domain.com/webhooks'
+    openaiKey: '',
+    azureEndpoint: '',
+    azureKey: '',
+    unipileKey: '',
+    webhookUrl: ''
   });
 
   const [notifications, setNotifications] = useState({
@@ -49,23 +49,21 @@ export default function SettingsPage() {
   });
 
   const handleCopyApiKey = () => {
+    if (!apiSettings.azureKey) return;
     navigator.clipboard.writeText(apiSettings.azureKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSaveProfile = () => {
-    // Ici on sauvegarderait les données
     alert('Profil mis à jour avec succès !');
   };
 
   const handleSaveApi = () => {
-    // Ici on sauvegarderait les paramètres API
     alert('Paramètres API mis à jour avec succès !');
   };
 
   const handleSaveNotifications = () => {
-    // Ici on sauvegarderait les notifications
     alert('Paramètres de notifications mis à jour avec succès !');
   };
 
@@ -221,10 +219,11 @@ export default function SettingsPage() {
                         <label className="block text-sm font-medium text-gray-700">Clé API</label>
                         <div className="relative">
                           <input
-                            type={showApiKey ? "text" : "password"}
+                            type={showApiKey ? 'text' : 'password'}
                             className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 pr-20 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             value={apiSettings.azureKey}
                             onChange={(e) => setApiSettings({...apiSettings, azureKey: e.target.value})}
+                            placeholder="Entrez votre clé via l'UI (pas dans le code)"
                           />
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
                             <button
@@ -257,6 +256,7 @@ export default function SettingsPage() {
                         className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         value={apiSettings.unipileKey}
                         onChange={(e) => setApiSettings({...apiSettings, unipileKey: e.target.value})}
+                        placeholder="Entrez votre clé via l'UI"
                       />
                     </div>
                   </div>
@@ -271,6 +271,7 @@ export default function SettingsPage() {
                         className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         value={apiSettings.webhookUrl}
                         onChange={(e) => setApiSettings({...apiSettings, webhookUrl: e.target.value})}
+                        placeholder="https://votre-domaine.com/webhooks"
                       />
                     </div>
                   </div>
